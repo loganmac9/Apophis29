@@ -7,6 +7,7 @@ In the future the program will navigate how to capture an asteroid, more specifi
 The user will be able to choose from a catalog of asteroids of which they wish to travel to and "capture."
 The asteroid will then be moved to a suitable location(potentially a lagrange point) for theoretical exploitation.
 
+Part 1:
 Currently the two-body systems, Earth-Sun and Earth-Moon are developed and have graphical representations.
 The N-body systems are in development using 8th order Runge-Kutta/DoPRI.
 
