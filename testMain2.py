@@ -1,5 +1,6 @@
 import argparse
 import sys
+import numpy as np
 from config import ConfigManager
 from logger import Logger
 #from Visual import Visual
@@ -7,6 +8,7 @@ from logger import Logger
 from visual3d import Visual3D
 from visVivaE import VisVivaEarth
 from  visVivaM import VisVivaMoon
+from  celestData import CelestData
 
 """
 change the viz = Visual() part around line 119 to use the other visual classes:
@@ -151,6 +153,65 @@ def run_visualization(system_type, config, logger):
     except Exception as e:
         print(f"Error running visualization for {system_type}: {e}")
         logger.error(f"Error running visualization for {system_type}: {e}")
+
+# ------------------------------------------------------------------------------------------
+
+# Mass in kg, radius in m, position in km, and velocity in m/s.
+sun = CelestData(
+    name="Sun",
+    mass=1.989e30,
+    radius=6.957e8,
+    position=np.array([0.0, 0.0, 0.0]),
+    velocity=np.array([0.0, 0.0, 0.0])
+    # Zeros in position and velocity arrays because I'm taking the sun as stationary.
+)
+earth = CelestData(
+    name="Earth",
+    mass=5.972e24,
+    radius=6.371e6,
+    position=np.array([1.496e11, 0.0, 0.0]),
+    velocity=np.array([0.0, 29783.0, 0.0])
+    # Position in the x-axis plane(distance from the sun).
+    # Orbital velocity(avg - 2pi(r)/T) in the y-axis plane(perpendicular to the x-axis plane. Think x,y,z graph).
+    )
+moon = CelestData(
+    name="Moon",
+    mass=7.348e22,
+    radius=1.737e6,
+    position=earth.position + np.array([3.844e8, 0.0, 0.0]),
+    velocity=earth.velocity + np.array([0.0, 1022.0, 0.0])
+    # Earth's position from Sun + Moon's position from Earth...
+)
+asteroid = CelestData(
+    name="Apophis",
+    mass=5.3e10,
+    radius=178,
+    position=np.array([1.38e11, 0.0, 0.0]),
+    velocity=np.array([0.0, 30730.0, 0.0])
+    # Using 99942 Apophis data for now until able to pull from database.
+    # 1.38e11 distance from sun to asteroid.
+)
+rocket = CelestData(
+    name="Rocket",
+    mass=5.49e5,
+    radius=1.85,
+    position=earth.position.copy(),
+    velocity=earth.velocity.copy()
+    # Position in the x-axis plane(distance from the sun). Based off the Falcon 9 rocket.
+    # .copy() gives rocket its own independent array in memory
+    # Without it, rocket and earth share the same array —
+    # if one moves, the other would move with it
+    # velocity=earth.velocity + np.array([0.0, 0.0, 0.0]) etc...
+)
+# Quick debug
+print(f"This is a debug statement for the rk4 program")
+print(sun)
+print(earth)
+print(moon)
+print(asteroid)
+print(rocket)
+
+
 
 
 def main():
