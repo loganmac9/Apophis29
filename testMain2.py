@@ -9,6 +9,7 @@ from visual3d import Visual3D
 from visVivaE import VisVivaEarth
 from  visVivaM import VisVivaMoon
 from  celestData import CelestData
+from stateVector import StateVector
 
 """
 change the viz = Visual() part around line 119 to use the other visual classes:
@@ -211,7 +212,11 @@ print(moon)
 print(asteroid)
 print(rocket)
 
+StateVector.unpack(result, bodies)
 
+# Now each body has updated position and velocity directly:
+print(earth.position)   # updated!
+print(moon.position)    # updated!
 
 
 def main():

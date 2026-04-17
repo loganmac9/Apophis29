@@ -17,6 +17,7 @@ class GravityCalc:
                 if d == 0:
                     continue
                 a += self.G * (body_j.mass/d**3) * r_ij
+            # (Adds a single item to the end of an existing list)
             accelerations.append(a)      # store this body's total acceleration
         return accelerations
 
@@ -45,7 +46,7 @@ class GravityCalc:
         positions = state[:3 * N].reshape(N, 3)  # shape: (N, 3)
         velocities = state[3 * N:].reshape(N, 3)  # shape: (N, 3)
         # Breaks the list into positions and velocities for derivation.
-        # Before reshape — flat, hard to work with:
+        # Before reshape —> flat, hard to work with:
         #[xs, ys, zs, xe, ye, ze, xm, ym, zm]
         # After .reshape(3, 3) — one row per body:
         #[[xs, ys, zs],  # row 0 = Sun
@@ -63,6 +64,8 @@ class GravityCalc:
         # With this update:
         # compute_accelerations reads body.position = trial position
         # integrator gets accurate derivatives for that trial state
+        # (temp)Intermediate guesses that don't represent real moments in time.
+        # Just needed bodies updated long enough to compute accelerations
 
         # Get accelerations using your method above.
         accelerations = self.compute_accelerations(bodies)
