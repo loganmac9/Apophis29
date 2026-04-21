@@ -7,9 +7,11 @@ from logger import Logger
 #from visualZOOM import VisualZoom
 from visual3d import Visual3D
 from visVivaE import VisVivaEarth
-from  visVivaM import VisVivaMoon
-from  celestData import CelestData
-from stateVector import StateVector
+from visVivaM import VisVivaMoon
+from celestData import CelestData
+from rk4_integrator import RK4Integrator
+from simulation import Simulation
+
 
 """
 change the viz = Visual() part around line 119 to use the other visual classes:
@@ -20,6 +22,7 @@ change the viz = Visual() part around line 119 to use the other visual classes:
 --> viz = Visual(vis_viva.radii, vis_viva.velocities, vis_viva.semiMajorAxis)
             viz.run()
 """
+
 
 def setup_configuration():
     """Set up initial configuration"""
@@ -155,8 +158,9 @@ def run_visualization(system_type, config, logger):
         print(f"Error running visualization for {system_type}: {e}")
         logger.error(f"Error running visualization for {system_type}: {e}")
 
-# ------------------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------------------
+print(f"*******************RK integrator need to be put into user methods*******************")
 # Mass in kg, radius in m, position in km, and velocity in m/s.
 sun = CelestData(
     name="Sun",
@@ -172,7 +176,7 @@ earth = CelestData(
     radius=6.371e6,
     position=np.array([1.496e11, 0.0, 0.0]),
     velocity=np.array([0.0, 29783.0, 0.0])
-    # Position in the x-axis plane(distance from the sun).
+    # Position in the x-axis plane(distance from the sun [x,y,z]).
     # Orbital velocity(avg - 2pi(r)/T) in the y-axis plane(perpendicular to the x-axis plane. Think x,y,z graph).
     )
 moon = CelestData(
@@ -196,7 +200,7 @@ rocket = CelestData(
     name="Rocket",
     mass=5.49e5,
     radius=1.85,
-    position=earth.position.copy(),
+    position=earth.position + np.array([6.371e6, 0.0, 0.0]),
     velocity=earth.velocity.copy()
     # Position in the x-axis plane(distance from the sun). Based off the Falcon 9 rocket.
     # .copy() gives rocket its own independent array in memory
@@ -204,6 +208,8 @@ rocket = CelestData(
     # if one moves, the other would move with it
     # velocity=earth.velocity + np.array([0.0, 0.0, 0.0]) etc...
 )
+bodies = [sun, earth, moon, asteroid, rocket]
+
 # Quick debug
 print(f"This is a debug statement for the rk4 program")
 print(sun)
@@ -212,11 +218,48 @@ print(moon)
 print(asteroid)
 print(rocket)
 
-StateVector.unpack(result, bodies)
+# initial positions before simulation runs
+print(earth.position)
+print(moon.position)
 
-# Now each body has updated position and velocity directly:
-print(earth.position)   # updated!
-print(moon.position)    # updated!
+# Create integrator
+integrator = RK4Integrator()
+
+# Create and run simulation
+sim = Simulation(bodies, integrator)
+sim.run(t_total=365.25*24*3600, dt=3600)  # 1 year, 1 hour steps (in seconds)
+
+# Get results for visualization
+data = sim.get_results()
+
+# Earth's position after the simulation verifying its movement:
+#trajectory = data.get_trajectory("Earth")
+#print(f"Earth start: {trajectory[0]}")
+#print(f"Earth end:   {trajectory[-1]}")
+#print(f"Total steps: {len(trajectory)}")
+
+# Checking energy results:
+#results = sim.get_results()
+#print(f"Initial energy: {results.energies[0]:.6e}")
+#print(f"Final energy:   {results.energies[-1]:.6e}")
+#print(f"Total energies stored: {len(results.energies)}")
+
+# Manual drift calculation
+#e0 = results.energies[0]
+#ef = results.energies[-1]
+#manual_drift = abs((ef - e0) / e0) * 100
+#print(f"Manual drift calculation: {manual_drift:.15f}%")
+#print(f"Difference: {abs(ef - e0):.6e} J")
+
+# simulation just computed:
+#
+# 8,766 time steps (one per hour for a year)
+# 5 bodies per step
+# 20 gravitational pair calculations per step
+# 4 derivative evaluations per step (RK4)
+# Total: roughly 700,000 gravitational calculations
+#
+# And it ran successfully. That's a real n-body simulation you built from scratch.
 
 
 def main():

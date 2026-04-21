@@ -32,7 +32,7 @@ class SimulationData:
     def get_trajectory(self, body_name):
         # Grab the list of positions for one body by name, then convert to numpy array.
         # "Trajectory" is the new numpy array.
-        trajectory = np.arrays(self.positions[body_name])
+        trajectory = np.array(self.positions[body_name])
         return trajectory
 
     def get_snapshot(self, index):
@@ -53,8 +53,8 @@ class SimulationData:
         initial = self.energies[0]
         current = self.energies[-1]  # -1 means last element in Python
         drift = abs((current - initial) / initial) * 100
-        print(f"Energy drift: {drift:.6f}%")
-        # 0.001% drift over a year is acceptable.
+        print(f"Energy drift: {drift:.15f}%")
+        # 0.001% drift over a year is acceptable. .15f showing 15 decimal places. It's precise.
         # A 1%> drift means the time step is too large or something is broken
         # ex. If drift is too large → x1,y1,z1 could be thousands of km from x2,y2,z2
         # and rocket misses the asteroid entirely.

@@ -36,6 +36,10 @@ class RK4Integrator:
         # but also passes bodies along too:
         f = lambda t_diff, state_diff: gravity.compute_derivatives(t_diff, state_diff, bodies)
 
+        # Store initial state before loop starts
+        energy = gravity.compute_total_energy(bodies)
+        sim_data.store_step(t, bodies, energy)
+
         while t < t_total:
             # New state is stepped through.
             new_state = self.step(t, state, dt, f)

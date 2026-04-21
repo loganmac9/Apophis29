@@ -87,6 +87,11 @@ class GravityCalc:
             for j in range(i + 1, len(bodies)):  # i+1 avoids double counting
                 r_ij = bodies[j].position - bodies[i].position
                 d = np.linalg.norm(r_ij) # Changes r_ij to a scalar distance, not a vector.
+
+                if d == 0.0:
+                    print(f"Error: zero distance between {bodies[i].name} and {bodies[j].name}")
+                    continue  # skip this pair, don't divide
+
                 PE += -self.G*bodies[i].mass*bodies[j].mass/d  # -G*mi*mj / distance
                 # This is accumulating the PE of each body "+="
         return KE + PE
