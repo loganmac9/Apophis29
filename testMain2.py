@@ -10,7 +10,9 @@ from visVivaE import VisVivaEarth
 from visVivaM import VisVivaMoon
 from celestData import CelestData
 from rk4_integrator import RK4Integrator
+from dop853_integrator import DOP853Integrator
 from simulation import Simulation
+from visualizer import Visualizer
 
 
 """
@@ -223,11 +225,16 @@ print(earth.position)
 print(moon.position)
 
 # Create integrator
-integrator = RK4Integrator()
+# integrator = RK4Integrator()
+integrator = DOP853Integrator()
 
 # Create and run simulation
 sim = Simulation(bodies, integrator)
 sim.run(t_total=365.25*24*3600, dt=3600)  # 1 year, 1 hour steps (in seconds)
+
+data = sim.get_results()
+viz = Visualizer(data)
+viz.run()
 
 # Get results for visualization
 data = sim.get_results()
@@ -259,7 +266,8 @@ data = sim.get_results()
 # 4 derivative evaluations per step (RK4)
 # Total: roughly 700,000 gravitational calculations
 #
-# And it ran successfully. That's a real n-body simulation you built from scratch.
+
+
 
 
 def main():

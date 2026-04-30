@@ -17,6 +17,10 @@ class GravityCalc:
                 if d == 0:
                     continue
                 a += self.G * (body_j.mass/d**3) * r_ij
+
+            # rocket drone addition to the total forces
+            if hasattr(body_i, 'thrust_vector'):
+                a += body_i.thrust_vector / body_i.mass  # F=ma → a=F/m
             # (Adds a single item to the end of an existing list)
             accelerations.append(a)      # store this body's total acceleration
         return accelerations
