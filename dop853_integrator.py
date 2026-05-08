@@ -5,7 +5,7 @@ class DOP853Integrator:
     # solve_ivp,  takes the entire time span and figures out the steps itself.
 
     def integrate(self, bodies, t_total, dt, gravity, state_vector, sim_data,
-                  rtol=1e-10, atol=1e-10):
+                  rtol=1e-10, atol=1e-12):
         # Tighter tolerances = more accurate but slower. NASA uses 1e-12.
         # DOP853 ignores dt. Scipy chooses its own step sizes adaptively.
 
@@ -29,7 +29,8 @@ class DOP853Integrator:
                 method='DOP853',       # 'DOP853'
                 rtol=rtol,             # relative tolerance
                 atol=atol,             # absolute tolerance
-                dense_output=False     # whether to allow interpolation between steps
+                dense_output=False,    # whether to allow interpolation between steps
+                max_step=1/(8766*4)    # 1/(8766*4) 6 min steps for moon - 1/8766 maximum 1 hour step in years
                         )
 
         # To loop through all steps/results scipy ran:

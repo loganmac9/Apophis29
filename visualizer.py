@@ -5,26 +5,35 @@ import numpy as np
 
 class Visualizer:
 
-    # Body colors and sizes as class constants
-    COLORS = {
-        "Sun":     (1.0, 1.0, 0.0),
-        "Earth":   (0.0, 0.5, 1.0),
-        "Moon":    (0.8, 0.8, 0.8),
-        "Apophis": (1.0, 0.3, 0.0),
-        "Rocket":  (0.0, 1.0, 0.0),
-    }
-
-    # not physically accurate but readable
-    SIZES = {
-        "Sun": 12,
-        "Earth": 6,
-        "Moon": 3,
-        "Apophis": 3,
-        "Rocket": 2,
-    }
-
     def __init__(self, sim_data):
         self.sim_data = sim_data
+
+        # Default colors and sizes for all possible bodies
+        DEFAULT_COLORS = {
+            "Sun": (1.0, 1.0, 0.0),
+            "Earth": (0.0, 0.5, 1.0),
+            "Moon": (0.8, 0.8, 0.8),
+            "Apophis": (1.0, 0.3, 0.0),
+            "Rocket": (0.0, 1.0, 0.0),
+        }
+        DEFAULT_SIZES = {
+            "Sun": 12,
+            "Earth": 6,
+            "Moon": 3,
+            "Apophis": 3,
+            "Rocket": 2,
+        }
+
+        self.COLORS = {
+            name: DEFAULT_COLORS[name]
+            for name in sim_data.positions
+            if name in DEFAULT_COLORS
+        }
+        self.SIZES = {
+            name: DEFAULT_SIZES[name]
+            for name in sim_data.positions
+            if name in DEFAULT_SIZES
+        }
         # pygame initialization
         pygame.init()
 
@@ -40,13 +49,13 @@ class Visualizer:
         # Playback state
         # set frame index:
         self.frame_index = 0
-        self.playback_speed = 1  # frames to advance per render
+        self.playback_speed = 12  # frames to advance per render - Default = 1
         self.paused = False  # pause state
 
         # Scale factors for coordinate conversion.
-        self.scale = 1.0 / 3e11  # solar system scale.
-        self.scale_earth = 1.0 / 1e9  # earth-moon zoom scale.
-        self.scale_asteroid = 1.0 / 1e6  # shows asteroid + drone formation.
+        self.scale = 200      # 1 AU = 200 pixels, solar system view
+        self.scale_earth = 50000    # zoomed into Earth-Moon system
+        self.scale_asteroid = 100000   # zoomed into asteroid + drones
         self.zoom_mode = 'solar'  # current zoom mode
 
         # Clock Creation for Frame Rate:
@@ -59,9 +68,9 @@ class Visualizer:
         self.total_frames = len(sim_data.times)
 
         # Camera rotation state — needed by setup_3d_camera and _handle_mouse
-        self.camera_angle_x = 20.0
-        self.camera_angle_y = 0.0
-        self.camera_distance = 3.0
+        self.camera_angle_x = 30.0  # tilted degrees, looking straight down at orbital plane
+        self.camera_angle_y = 20.0
+        self.camera_distance = 5.0  # Default = 3
         self.mouse_dragging = False
         self.last_mouse_pos = (0, 0)
 
@@ -72,6 +81,10 @@ class Visualizer:
 
         # Call OpenGL one-time setup at end of __init__
         self._init_opengl()
+
+        self._precompute_gl_positions()
+
+
 
     # --------------------— OpenGL setup and 3D rendering  (built by Claude)---------------------------
     # ////////////////////////////////////////////////////////////////////////////////////////////
@@ -143,6 +156,16 @@ class Visualizer:
 
         return star_list
 
+    def _precompute_gl_positions(self):
+        print("Precomputing trajectories...")
+        self.gl_trajectories = {}
+        for name in self.COLORS:
+            traj = self.sim_data.get_trajectory(name)
+            self.gl_trajectories[name] = np.array(
+                [self._world_to_gl(p) for p in traj]
+            )
+            print(f"  Precomputed {name}: {len(self.gl_trajectories[name])} positions")
+        print("Precompute Finished.")
     def setup_3d_camera(self):
         """
         Called every frame to position and orient the camera.
@@ -180,74 +203,69 @@ class Visualizer:
         glDepthMask(GL_TRUE)
 
     def _get_target_position(self):
-        """
-        Returns the current 3D world position (in OpenGL units) of whichever
-        body the camera is tracking, based on self.camera_target.
-        Returns None for 'solar' (camera stays at origin).
-        """
         name_map = {
             'earth': 'Earth',
             'asteroid': 'Apophis',
         }
         body_name = name_map.get(self.camera_target)
         if body_name is None:
-            return None  # solar — no offset needed
+            if self.camera_distance < 3.0:
+                self.camera_distance = 5.0
+            return None
 
         traj = self.sim_data.get_trajectory(body_name)
-        pos = traj[self.frame_index]  # metres
-        return self._world_to_gl(pos)  # convert to GL units
+        pos = traj[self.frame_index]
+        return self._world_to_gl(pos)
 
     def _world_to_gl(self, position):
-        """
-        Converts a position in metres to OpenGL coordinate units.
-        We scale everything so 1 AU ≈ 1.0 GL unit, keeping numbers
-        comfortably inside the near/far clipping planes.
-        """
-        AU = 1.496e11  # metres per astronomical unit
-        return np.array(position, dtype=float) / AU
+        # Positions already in AU — no conversion needed
+        return np.array(position, dtype=float)
 
     def draw_3d_scene(self):
-        """
-        Renders all celestial bodies and their orbital trails in 3D OpenGL.
-
-        Draws:
-          - Orbital trail lines (faint, same colour as body)
-          - Body sphere at current position (bright point or sphere)
-          - Orbital plane grid (faint blue reference grid)
-        """
-        # --- Orbital plane reference grid ---
         self._draw_grid()
 
-        # --- Each body ---
         for name, color in self.COLORS.items():
-            traj = self.sim_data.get_trajectory(name)
+            gl_positions = self.gl_trajectories[name]
+            draw_positions = gl_positions
 
-            # Convert positions to GL units
-            gl_positions = np.array([self._world_to_gl(p) for p in traj])
+            # Skip Moon trail in solar mode — invisible at that scale
+            if name == 'Moon' and self.camera_target != 'earth':
+                if self.frame_index < len(draw_positions):
+                    pos = draw_positions[self.frame_index]
+                    glColor3f(*color)
+                    glPointSize(5.0)
+                    glBegin(GL_POINTS)
+                    glVertex3f(pos[0], pos[1], pos[2])
+                    glEnd()
+                continue
 
-            # -- Orbital trail (up to current frame, 40% opacity) --
-            trail = gl_positions[:self.frame_index]
+            # Trail — Moon uses every point, others every 10th
+            step = 1 if name == 'Moon' else 10
+            trail = draw_positions[:self.frame_index:step]
             if len(trail) >= 2:
-                glLineWidth(1.0)
+                glLineWidth(1.5)
+                glColor4f(color[0], color[1], color[2], 0.6)
                 glBegin(GL_LINE_STRIP)
-                for i, pt in enumerate(trail):
-                    # Fade the trail: older points are more transparent
-                    alpha = 0.15 + 0.55 * (i / len(trail))
-                    glColor4f(color[0], color[1], color[2], alpha)
+                for pt in trail:
                     glVertex3f(pt[0], pt[1], pt[2])
                 glEnd()
 
-            # -- Body sphere at current position --
-            if self.frame_index < len(gl_positions):
-                pos = gl_positions[self.frame_index]
+            # Body at current position
+            if self.frame_index < len(draw_positions):
+                pos = draw_positions[self.frame_index]
                 glColor3f(*color)
-
-                # Use a quadric sphere for Sun and Earth; points for small bodies
                 size_px = self.SIZES[name]
-                if size_px >= 6:
-                    self._draw_sphere(pos, radius=size_px * 0.003)
+                if name == "Sun":
+                    self._draw_sphere(pos, radius=0.08)
+                elif size_px >= 6:
+                    self._draw_sphere(pos, radius=size_px * 0.0003)
                 else:
-                    glPointSize(max(2.0, float(size_px)))
+                    # Moon gets bigger point in earth mode
+                    if name == 'Moon' and self.camera_target == 'earth':
+                        point_size = 8.0
+                    else:
+                        point_size = max(6.0, float(size_px))
+                    glPointSize(point_size)
                     glBegin(GL_POINTS)
                     glVertex3f(pos[0], pos[1], pos[2])
                     glEnd()
@@ -266,29 +284,27 @@ class Visualizer:
         glPopMatrix()
 
     def _draw_grid(self):
-        """
-        Draws a faint reference grid on the orbital plane (z = 0).
-        Helps the viewer understand the 3D orientation of the scene.
-        Grid spans ±5 AU in steps of 0.5 AU.
-        """
-        glLineWidth(0.5)
-        glColor4f(0.1, 0.2, 0.4, 0.3)  # dim blue, semi-transparent
+        # Grid only makes sense in solar view
+        if self.camera_target != 'solar':
+            return
+        glLineWidth(1.5)
+        glColor3f(0.2, 0.4, 0.8)
 
-        step = 0.5  # AU
-        limit = 5.0  # AU
+        limit = 8.0
+        step = 1.0
 
         glBegin(GL_LINES)
+        # Draw on x-y plane (z=0) instead of x-z plane (y=0)
         x = -limit
         while x <= limit + 1e-9:
-            glVertex3f(x, 0.0, -limit)
-            glVertex3f(x, 0.0, limit)
+            glVertex3f(x, -limit, 0.0)  # was (x, 0.0, -limit)
+            glVertex3f(x, limit, 0.0)  # was (x, 0.0,  limit)
             x += step
-
-        z = -limit
-        while z <= limit + 1e-9:
-            glVertex3f(-limit, 0.0, z)
-            glVertex3f(limit, 0.0, z)
-            z += step
+        y = -limit
+        while y <= limit + 1e-9:
+            glVertex3f(-limit, y, 0.0)  # was (-limit, 0.0, z)
+            glVertex3f(limit, y, 0.0)  # was ( limit, 0.0, z)
+            y += step
         glEnd()
 
     def _handle_mouse(self):
@@ -304,8 +320,8 @@ class Visualizer:
             if self.mouse_dragging:
                 dx = mouse_pos[0] - self.last_mouse_pos[0]
                 dy = mouse_pos[1] - self.last_mouse_pos[1]
-                self.camera_angle_y += dx * 0.4  # horizontal drag → spin
-                self.camera_angle_x += dy * 0.4  # vertical drag   → tilt
+                self.camera_angle_y += dx * 2.0  # horizontal drag → spin
+                self.camera_angle_x += dy * 2.0  # vertical drag   → tilt
                 # Clamp tilt so camera never flips upside down
                 self.camera_angle_x = max(-89.0, min(89.0, self.camera_angle_x))
             self.mouse_dragging = True
@@ -440,6 +456,15 @@ class Visualizer:
                     self.camera_target = targets[(current + 1) % 3]
                     print(f"Camera target: {self.camera_target}")
 
+                    # Set zoom once when target changes — not every frame
+                    # stops the "rubber banding"
+                    if self.camera_target == 'solar':
+                        self.camera_distance = 5.0
+                    elif self.camera_target == 'earth':
+                        self.camera_distance = 0.05  # Default = .05
+                    elif self.camera_target == 'asteroid':
+                        self.camera_distance = 0.02
+
     def run(self):
         running = True
         while running:
@@ -468,11 +493,11 @@ class Visualizer:
             # Clear HUD surface each frame — fully transparent
             self.hud_surface.fill((0, 0, 0, 0))
 
+            # Using OpenGL instead to do: draw_orbits(), draw_bodies()
             # draw orbital paths as long as sim is not paused.
-            self.draw_orbits()
-
+            # self.draw_orbits()
             # draw body markers at current frame as long as sim is not paused.
-            self.draw_bodies()
+            # self.draw_bodies()
 
             # draw HUD text overlay
             self.draw_hud()
@@ -498,6 +523,7 @@ class Visualizer:
         screen_x = int(position[0] * scale + self.width / 2)
         screen_y = int(-position[1] * scale + self.height / 2)
         return screen_x, screen_y
+
     def draw_orbits(self):
         # getting trajectory up to current frame.
         # name gets the planetary object, while color gets (1.0, 0.0, 0.5) for example.
@@ -554,6 +580,22 @@ class Visualizer:
             # Blit it slightly offset from the body center
             self.hud_surface.blit(label, (screen_x + 8, screen_y - 8))
 
+    def _format_distance(self, dist_au):
+        # Converts AU to human-readable distance
+        dist_km = dist_au * 1.496e8
+        if dist_km > 1e6:
+            return f"{dist_au:.4f} AU  ({dist_km / 1e6:.2f}M km)"
+        elif dist_km > 1000:
+            return f"{dist_au:.4f} AU  ({dist_km:,.0f} km)"
+        else:
+            return f"{dist_au:.6f} AU  ({dist_km:.1f} km)"
+
+    def _format_velocity(self, speed_auyr):
+        # Converts AU/year to km/s
+        # 1 AU/year = 4.74057 km/s
+        speed_kms = speed_auyr * 4.74057
+        return f"{speed_kms:.2f} km/s"
+
     def draw_hud(self):
         # displays all the text information overlaid on the simulation.
         WHITE = (255, 255, 255, 255)
@@ -569,8 +611,13 @@ class Visualizer:
 
         # Current time:
         current_time = self.sim_data.times[self.frame_index]
+        days = current_time * 365.25
+        draw_line(f"Time: {days:.1f} days  ({current_time:.3f} years)")
+        '''
+        current_time = self.sim_data.times[self.frame_index]
         days = current_time / 86400  # 86400 seconds per day
         draw_line(f"Time: {days:.1f} days")
+        '''
 
         # Energy drift:
         e0 = self.sim_data.energies[0]
@@ -579,11 +626,12 @@ class Visualizer:
         draw_line(f"Energy drift: {drift:.10f} %")
 
         # Body velocities(sim_data stores velocities):
+        draw_line("--- Velocities ---")
         for name in self.COLORS:
             vel_array = np.array(self.sim_data.velocities[name])
             current_vel = vel_array[self.frame_index]
-            speed = np.linalg.norm(current_vel)  # absolute value here.
-            draw_line(f"{name}: {speed:.1f} m/s")
+            speed = np.linalg.norm(current_vel)
+            draw_line(f"  {name}: {self._format_velocity(speed)}")
 
         # Distances between bodies:
         draw_line("--- Distances ---")
@@ -595,10 +643,12 @@ class Visualizer:
             pos_b = self.sim_data.get_trajectory(name_b)[self.frame_index]
             return np.linalg.norm(pos_b - pos_a)
 
-        draw_line(f"  Earth-Sun:    {body_distance('Earth', 'Sun'):.3e} m")
-        draw_line(f"  Moon-Earth:   {body_distance('Moon', 'Earth'):.3e} m")
-        draw_line(f"  Apophis-Sun:  {body_distance('Apophis', 'Sun'):.3e} m")
-        draw_line(f"  Rocket-Earth: {body_distance('Rocket', 'Earth'):.3e} m")
+        draw_line(f"  Earth-Sun:    {self._format_distance(body_distance('Earth', 'Sun'))}")
+        draw_line(f"  Apophis-Sun:  {self._format_distance(body_distance('Apophis', 'Sun'))}")
+        if 'Moon' in self.sim_data.positions:
+            draw_line(f"  Moon-Earth:   {self._format_distance(body_distance('Moon', 'Earth'))}")
+        if 'Rocket' in self.sim_data.positions:
+            draw_line(f"  Rocket-Earth: {self._format_distance(body_distance('Rocket', 'Earth'))}")
 
         # Current playback speed:
         draw_line(f"Speed: {self.playback_speed}x  {'PAUSED' if self.paused else 'PLAYING'}")

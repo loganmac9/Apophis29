@@ -1,7 +1,9 @@
 import numpy as np
 
 class GravityCalc:
-    G = 6.674e-11
+    # G = 6.674e-11 # SI-units
+    # G in AU³ / (M☉ ⋅ year²) = 4π²
+    G = 4 * np.pi ** 2  # ≈ 39.478
 
     def compute_accelerations(self, bodies):
         # acceleration done by: a_i = G(SUM(j!=i)(m_j/[r_ij]^3)r_ij)
@@ -60,8 +62,8 @@ class GravityCalc:
         # Temporarily update body positions so compute_accelerations
         # uses the current integrator state, not the stored body state.
         for i, body in enumerate(bodies):
-            body.position = positions[i]
-            body.velocity = velocities[i]
+            body.position = positions[i].copy()
+            body.velocity = velocities[i].copy()
         # Without this update:
         # compute_accelerations reads body.position = Earth's position at t=0
         # even when integrator is testing a trial state halfway through the step
