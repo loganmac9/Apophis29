@@ -11,11 +11,11 @@ Part 1(Completed):
 Currently the two-body systems, Earth-Sun and Earth-Moon are developed and have graphical representations built with the "Vis-viva"(https://en.wikipedia.org/wiki/Vis-viva_equation).
 The N-body systems are in development using 8th order Runge-Kutta/DoPRI(https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods, https://en.wikipedia.org/wiki/Dormand%E2%80%93Prince_method).
 
-Part 2: 8th order adaptive Runge-kutta/DOPRI consists currently of celestData.py, gravity.py, stateVector.py, testMain2.py, rk4_inntegrator.py, simulationData.py, and simulation.py
+Part 2: 8th order adaptive Runge-kutta/DOPRI consists currently of celestData.py, gravity.py, stateVector.py, mainApo.py, rk4_inntegrator.py, simulationData.py, dop853_integrator.py, visualizer and simulation.py
 
 ------------------------------------------------------------------------------------------------------------
 
 Execution:
-Run testMain2.py
-Initialized for the visual3d class(importing Visual3D)
-Includes debug statements for Part 2 developmnt.
+Run mainApo.py
+Two body system initialized for the visual3d class(importing Visual3D)
+N-body system set for option 3.
