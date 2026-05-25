@@ -14,6 +14,8 @@ from rk4_integrator import RK4Integrator
 from dop853_integrator import DOP853Integrator
 from simulation import Simulation
 from visualizer import Visualizer
+from asteroid import Asteroid
+from asteroid_database import AsteroidDatabase
 
 
 """
@@ -207,6 +209,7 @@ def run_visualization(system_type, config, logger):
             apo_inc = np.radians(3.3)
             v_apo = 1.0552 * 2 * np.pi
 
+            '''
             asteroid = CelestData(
                 name="Apophis",
                 mass=M_apo,
@@ -220,6 +223,21 @@ def run_visualization(system_type, config, logger):
                 # Using 99942 Apophis data for now until able to pull from database.
                 # 1.38e11 distance from sun to asteroid.
             )
+            '''
+            apophis = Asteroid.from_orbital_elements(
+                name="Apophis",
+                mass=2.664e-20,
+                radius=1.19e-9,
+                a=0.9227,
+                e=0.1914,
+                i=3.339,
+                Omega=203.978,
+                omega=126.545,
+                M=270.0
+            )
+
+            print(apophis)  # test __repr__
+
             rocket = CelestData(
                 name="Rocket",
                 mass=M_rock,
@@ -232,7 +250,7 @@ def run_visualization(system_type, config, logger):
                 # if one moves, the other would move with it
                 # velocity=earth.velocity + np.array([0.0, 0.0, 0.0]) etc...
             )
-            bodies = [sun, earth, moon, asteroid]
+            bodies = [sun, earth, moon, apophis]
             # bodies = [sun, earth, moon, asteroid, rocket]
 
             """
@@ -248,6 +266,10 @@ def run_visualization(system_type, config, logger):
             # initial positions before simulation runs
             print(earth.position)
             print(moon.position)
+
+            db = AsteroidDatabase()
+            asteroidName = input("Enter An Asteroid Name: ")
+            asteroid = db.fetch(asteroidName)
 
             # Create integrator
             # integrator = RK4Integrator()
