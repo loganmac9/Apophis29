@@ -223,7 +223,7 @@ def run_visualization(system_type, config, logger):
                 # Using 99942 Apophis data for now until able to pull from database.
                 # 1.38e11 distance from sun to asteroid.
             )
-            '''
+            
             apophis = Asteroid.from_orbital_elements(
                 name="Apophis",
                 mass=2.664e-20,
@@ -237,6 +237,7 @@ def run_visualization(system_type, config, logger):
             )
 
             print(apophis)  # test __repr__
+            '''
 
             rocket = CelestData(
                 name="Rocket",
@@ -250,8 +251,6 @@ def run_visualization(system_type, config, logger):
                 # if one moves, the other would move with it
                 # velocity=earth.velocity + np.array([0.0, 0.0, 0.0]) etc...
             )
-            bodies = [sun, earth, moon, apophis]
-            # bodies = [sun, earth, moon, asteroid, rocket]
 
             """
             # Quick debug
@@ -264,12 +263,20 @@ def run_visualization(system_type, config, logger):
             """
 
             # initial positions before simulation runs
-            print(earth.position)
-            print(moon.position)
+            # print(earth.position)
+            # print(moon.position)
 
-            db = AsteroidDatabase()
-            asteroidName = input("Enter An Asteroid Name: ")
-            asteroid = db.fetch(asteroidName)
+            dataB = AsteroidDatabase()
+            asteroidName = input("Enter an asteroid name: ")
+            asteroid = dataB.fetch(asteroidName)
+            if asteroid is None:
+                print(f"Could not find asteroid: {asteroidName}")
+                exit()
+            print(asteroid)
+
+            bodies = [sun, earth, moon, asteroid]
+            # bodies = [sun, earth, moon, asteroid, rocket]
+
 
             # Create integrator
             # integrator = RK4Integrator()

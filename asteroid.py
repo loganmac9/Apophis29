@@ -106,9 +106,9 @@ class Asteroid(CelestData):
         # eccentricity, perihelion and aphelion distances in the future.
         if self.semi_major_axis < 1.0:
             return 'Aten'
-        elif self.semi_major_axis < 1.3:
+        elif self.semi_major_axis < 1.017:
             return 'Apollo'
-        elif self.semi_major_axis < 3.3:
+        elif self.semi_major_axis < 1.3:
             return 'Amor'
         elif self.semi_major_axis < 4.0:
             # MBA = Main Belt Asteroid

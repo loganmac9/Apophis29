@@ -24,6 +24,7 @@ class Visualizer:
             "Rocket": 2,
         }
 
+        '''
         self.COLORS = {
             name: DEFAULT_COLORS[name]
             for name in sim_data.positions
@@ -34,6 +35,23 @@ class Visualizer:
             for name in sim_data.positions
             if name in DEFAULT_SIZES
         }
+        '''
+        # Dynamic Color/Size
+        KNOWN_BODIES = ['Sun', 'Earth', 'Moon', 'Rocket']
+        DEFAULT_ASTEROID_COLOR = (1.0, 0.3, 0.0)  # orange
+        DEFAULT_ASTEROID_SIZE = 3
+
+        self.COLORS = {}
+        self.SIZES = {}
+        for name in sim_data.positions:
+            if name in DEFAULT_COLORS:
+                self.COLORS[name] = DEFAULT_COLORS[name]
+                self.SIZES[name] = DEFAULT_SIZES[name]
+            elif name not in KNOWN_BODIES:
+                # Any unknown body treated as asteroid — orange dot
+                self.COLORS[name] = DEFAULT_ASTEROID_COLOR
+                self.SIZES[name] = DEFAULT_ASTEROID_SIZE
+
         # pygame initialization
         pygame.init()
 
@@ -202,15 +220,20 @@ class Visualizer:
         glCallList(self.star_list)
         glDepthMask(GL_TRUE)
 
+    # looks up dynamically. Case-insensitive
+
     def _get_target_position(self):
         name_map = {
             'earth': 'Earth',
-            'asteroid': 'Apophis',
         }
+        # Find asteroid dynamically — any non-standard body
+        for name in self.sim_data.positions:
+            if name not in ['Sun', 'Earth', 'Moon', 'Rocket']:
+                name_map['asteroid'] = name  # whatever asteroid is in the sim
+                break
+
         body_name = name_map.get(self.camera_target)
         if body_name is None:
-            if self.camera_distance < 3.0:
-                self.camera_distance = 5.0
             return None
 
         traj = self.sim_data.get_trajectory(body_name)
@@ -644,7 +667,10 @@ class Visualizer:
             return np.linalg.norm(pos_b - pos_a)
 
         draw_line(f"  Earth-Sun:    {self._format_distance(body_distance('Earth', 'Sun'))}")
-        draw_line(f"  Apophis-Sun:  {self._format_distance(body_distance('Apophis', 'Sun'))}")
+        for name in self.sim_data.positions:
+            if name not in ['Sun', 'Earth', 'Moon', 'Rocket']:
+                draw_line(f"  {name}-Sun:  {self._format_distance(body_distance(name, 'Sun'))}")
+                break
         if 'Moon' in self.sim_data.positions:
             draw_line(f"  Moon-Earth:   {self._format_distance(body_distance('Moon', 'Earth'))}")
         if 'Rocket' in self.sim_data.positions:
