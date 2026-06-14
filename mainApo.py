@@ -16,6 +16,7 @@ from simulation import Simulation
 from visualizer import Visualizer
 from asteroid import Asteroid
 from asteroid_database import AsteroidDatabase
+from rocket import Rocket
 
 
 """
@@ -276,6 +277,18 @@ def run_visualization(system_type, config, logger):
 
             bodies = [sun, earth, moon, asteroid]
             # bodies = [sun, earth, moon, asteroid, rocket]
+
+            # Fixed mode — simple
+            rocket = Rocket(..., drone_mode='fixed', drone_count=10)
+
+            # Dynamic mode — scales to asteroid
+            rocket = Rocket(..., drone_mode='dynamic')
+            drone_count = rocket.get_drone_count(
+                asteroid=asteroid,
+                target_position=lagrange_point,
+                time_available=2.0  # years to complete capture
+            )
+            print(f"Drones needed: {drone_count}")
 
 
             # Create integrator
