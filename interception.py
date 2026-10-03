@@ -1,8 +1,6 @@
 import numpy as np
 from rocket import Rocket
 from asteroid import Asteroid
-from drone import Drone
-from simulationData import SimulationData
 
 class InterceptionCalculator:
 
@@ -12,11 +10,12 @@ class InterceptionCalculator:
     # GM_sun = G × 1 solar mass
     MU = 4 * np.pi ** 2
 
-    def __init__(self, rocket, asteroid, bodies):
+    def __init__(self, rocket, asteroid, bodies, sim_data):
         # stores references to everything
         self.rocket = rocket
         self.asteroid = asteroid
         self.bodies = bodies
+        self.sim_data = sim_data
 
         # Find Sun and Earth from bodies list
         self.sun = next(b for b in bodies if b.name == 'Sun')
@@ -25,16 +24,20 @@ class InterceptionCalculator:
     def find_launch_window(self, search_days=365):
         # searches through possible launch dates to find the one that minimizes total delta-v.
         # The optimal launch date is when the geometry between them minimizes the fuel needed for the trip.
-        # Meaning, when the Earth and target asteroid are at their closest approach.
+        # Minimum delta-v occurs when orbital geometry is most favorable
         # Get trajectories from simulation data
         earth_traj = self.sim_data.get_trajectory('Earth')
         asteroid_traj = self.sim_data.get_trajectory(self.asteroid.name)
+        asteroid_vel = np.array(self.sim_data.velocities[self.asteroid.name])
+        earth_vel = np.array(self.sim_data.velocities['Earth'])
+
         times = self.sim_data.times  # in years
 
         best_dv = np.inf
         best_launch = None
         best_tof = None
         best_v1 = None
+        best_v2 = None
 
         # Search over launch dates, hourly steps
         for i, t_launch in enumerate(times[:search_days * 24]):
@@ -58,14 +61,22 @@ class InterceptionCalculator:
                     continue  # Lambert failed for this geometry
 
                 # Delta-v needed at Earth departure
-                dv_launch = self.compute_delta_v(
-                    self.earth.velocity, v1
-                )
+                dv_launch = self.compute_delta_v(earth_vel[i], v1)
 
-                # Delta-v needed at asteroid arrival
-                dv_arrival = self.compute_delta_v(
-                    self.asteroid.velocity, v2  # approximate
-                )
+                # Delta-v needed at asteroid arrival, use asteroid velocity at arrival frame j
+                dv_arrival = self.compute_delta_v(asteroid_vel[j], v2)
+
+                # Add temporarily for debugging — print first successful result
+                if v1 is not None and best_dv == np.inf:
+                    print(f"First Lambert success:")
+                    print(f"  launch frame i={i}, t_launch={t_launch:.4f} years")
+                    print(f"  tof={tof:.1f} years")
+                    print(f"  Earth vel at launch:    {earth_vel[i]}")
+                    print(f"  v1 from Lambert:        {v1}")
+                    print(f"  dv_launch magnitude:    {np.linalg.norm(earth_vel[i] - v1):.4f} AU/yr")
+                    print(f"  Asteroid vel at arrival: {asteroid_vel[j]}")
+                    print(f"  v2 from Lambert:         {v2}")
+                    print(f"  dv_arrival magnitude:    {np.linalg.norm(asteroid_vel[j] - v2):.4f} AU/yr")
 
                 total_dv = dv_launch + dv_arrival
 
@@ -74,13 +85,32 @@ class InterceptionCalculator:
                     best_launch = t_launch
                     best_tof = tof
                     best_v1 = v1
+                    best_v2 = v2
 
-            return {
+        if best_launch is None:
+            print("No valid launch window found in search period")
+            return None
+
+        # Tsiolkovsky rocket equation — max delta-v rocket can achieve
+        dv_max = self.rocket.exhaust_vel * np.log(
+            (self.rocket.dry_mass + self.rocket.fuel_mass) / self.rocket.dry_mass
+        )
+        feasible = best_dv <= dv_max
+
+        if not feasible:
+            print(f"Warning: required Δv ({best_dv:.4f} AU/yr) exceeds "
+                  f"rocket capability ({dv_max:.4f} AU/yr)")
+
+        return {
                 'launch_time': best_launch,
+                'arrival_time': best_launch + best_tof,
                 'tof': best_tof,
                 'delta_v': best_dv,
-                'v1': best_v1
-            }
+                'v1': best_v1,
+                'v2': best_v2,
+                'feasible': feasible,
+                'dv_max': dv_max
+        }
 
     def compute_lambert(self, r1_vec, r2_vec, tof):
         # Solves Lambert's problem iteratively using the Universal Variable Method
@@ -102,18 +132,32 @@ class InterceptionCalculator:
         #    cos_dnu = angle between r1 and r2 vectors
         #    A = sqrt(r1*r2*(1+cos_dnu)) ← key geometric parameter
         cos_dnu = np.dot(r1_vec, r2_vec) / (r1 * r2)
-        sin_dnu = np.sqrt(1 - cos_dnu ** 2)
+        cos_dnu = np.clip(cos_dnu, -1.0, 1.0)  # guard floating point errors
 
-        if sin_dnu == 0:
-            return None, None  # 180° transfer — undefined
+        # Determines transfer direction
+        # Cross product z-component tells us if transfer is prograde or retrograde
+        cross_z = r1_vec[0] * r2_vec[1] - r1_vec[1] * r2_vec[0]
+        sin_dnu = np.sqrt(max(0.0, 1 - cos_dnu ** 2))
+        if cross_z < 0:
+            sin_dnu = -sin_dnu  # retrograde — negate to select prograde solution
 
+        if abs(sin_dnu) < 1e-10:
+            return None, None  # 180° or 0° transfer — undefined
+
+        # Key geometric parameter — ALWAYS positive for prograde
+        # sin_dnu negative → retrograde → A flips sign which selects retrograde solution
+        # Force prograde by ensuring A is always positive
         A = np.sqrt(r1 * r2 * (1 + cos_dnu))
+
+        if sin_dnu < 0:
+            A = -A  # retrograde case needs negative A
 
         if A == 0:
             return None, None  # degenerate case
 
         # 2. Set initial guess for the Universal Variable z
-        #    z = 0.0 is a safe starting point for elliptic orbits
+        # z = 0.0 is a safe starting point for elliptic orbits
+
         z = 0.0
         tolerance = 1e-8
 
@@ -162,14 +206,28 @@ class InterceptionCalculator:
 
             # Derivative dt/dz for Newton's method
             if abs(z) > 1e-6:
-                dtdz = (chi ** 3 * (0.5 / z) * (C - 1.5 * S / C) +
-                        0.375 * A / z * (np.sqrt(y) + A * np.sqrt(C / (2 * y)))) / np.sqrt(mu)
+                term1 = chi ** 3 * ((1 / (2 * z)) * (C - 1.5 * S / C) + (3 * S ** 2) / (4 * C))
+                term2 = (A / 8) * ((3 * S / C) * np.sqrt(y) + A * np.sqrt(C / y))
+                dtdz = (term1 + term2) / np.sqrt(mu)
             else:
-                dtdz = np.sqrt(2) / 40 * y ** 1.5 / np.sqrt(mu)
+                term1 = (np.sqrt(2) / 40) * y ** 1.5
+                term2 = (A / 8) * (np.sqrt(y) + A * np.sqrt(1 / (2 * y)))
+                dtdz = (term1 + term2) / np.sqrt(mu)
+            if abs(dtdz) < 1e-12:
+                z += 0.1  # nudge and retry rather than dividing by near-zero
+                continue
+
 
             # 5. Update z using Newton's method root finder
             #    z_new = z - f(z)/f'(z)  where f(z) = t(z) - tof
-            z_new = z + (tof - t) / dtdz
+            #    Damped — prevents wild overshoot into extreme hyperbolic z values
+            #    that would overflow cosh/sinh
+            raw_step = (tof - t) / dtdz
+
+            max_step = 10.0  # empirically safe bound for this unit system
+            step = np.clip(raw_step, -max_step, max_step)
+
+            z_new = z + step
 
             if abs(z_new - z) < tolerance:
                 z = z_new
@@ -191,13 +249,26 @@ class InterceptionCalculator:
         C = stumpff_C(z)
         S = stumpff_S(z)
         y = r1 + r2 - A * (1 - z * S) / np.sqrt(C)
-
-        f = 1 - y / r1
         g = A * np.sqrt(y / mu)
+        f = 1 - y / r1
         gdot = 1 - y / r2
+
+        # If g is negative, flip both velocity results
+        # Physical validity checks, reject degenerate solutions
+        if g == 0 or abs(f) > 100 or abs(gdot) > 100:
+            return None, None
+
+        print(f"  Lambert internals: A={A:.4f}, y={y:.4f}, g={g:.4f}, f={f:.4f}, gdot={gdot:.4f}")
 
         v1 = (r2_vec - f * r1_vec) / g
         v2 = (gdot * r2_vec - r1_vec) / g
+
+        # velocities should be reasonable for inner solar system
+        # Earth orbits at ~6.28 AU/yr so anything over 50 is degenerate
+        v1_mag = np.linalg.norm(v1)
+        v2_mag = np.linalg.norm(v2)
+        if v1_mag > 50 or v2_mag > 50:
+            return None, None
 
         return v1, v2
 
@@ -206,12 +277,80 @@ class InterceptionCalculator:
         return np.linalg.norm(v_required - v_current)
 
     def compute_transfer_to_lagrange(self, lagrange_point):
-        # plans return trajectory
-        pass
+        # return trajectory
+        # current position
+        r1 = self.asteroid.position
+        # end position
+        r2 = lagrange_point
 
-    def compute_drone_formation(self, n_drones):
-        # positions drones around asteroid
-        pass
+        distance = np.linalg.norm(lagrange_point - self.asteroid.position)
+        rough_tof = distance / 0.1  # AU / (AU/year) = years
+
+        velocities = self.compute_lambert(r1, r2, rough_tof)
+
+        # If Lambert fails velocities is (None, None) and velocities[0] crashes
+        if velocities[0] is None:
+            print("Warning: Lambert failed for Lagrange transfer")
+            return None
+
+        delta_v = self.compute_delta_v(self.asteroid.velocity, velocities[0])
+
+        return {
+                'tof': rough_tof,
+                'delta_v': delta_v,
+                'v1': velocities[0],
+                'v2': velocities[1],
+                'lagrange_point': lagrange_point,
+        }
+
+    def compute_drone_formation(self, n_drones, lagrange_point):
+        # Computes where each drone should position itself around the asteroid
+        # in a formation behind the asteroid pointing towards the target destination.
+
+        # Direction from asteroid toward target
+        to_target = lagrange_point - self.asteroid.position
+        dist_to_target = np.linalg.norm(to_target)
+
+        if dist_to_target == 0:
+            thrust_direction = np.array([1.0, 0.0, 0.0])
+        else:
+            thrust_direction = to_target / dist_to_target
+
+        # how far each drone hovers from the asteroid center
+        standoff = self.asteroid.radius * 10
+
+        # Formation center — BEHIND asteroid opposite to target
+        formation_center = self.asteroid.position - thrust_direction * standoff
+
+        # Build perpendicular ring around formation center
+        # Need two vectors perpendicular to thrust_direction
+        # Use Gram-Schmidt to find them
+        arbitrary = np.array([1.0, 0.0, 0.0])
+        if abs(np.dot(thrust_direction, arbitrary)) > 0.9:
+            arbitrary = np.array([0.0, 1.0, 0.0])
+
+        perp1 = np.cross(thrust_direction, arbitrary)
+        perp1 = perp1 / np.linalg.norm(perp1)
+        perp2 = np.cross(thrust_direction, perp1)
+        perp2 = perp2 / np.linalg.norm(perp2)
+
+        # Divide a full circle (2π radians) equally among n_drones
+        offsets = []
+        # ring tighter than standoff distance
+        ring_radius = standoff * 0.5
+
+        # For each drone compute its offset from asteroid center,
+        # place them in a ring in the y-z plane (perpendicular to x which is the thrust direction)
+        for i in range(n_drones):
+            angle = 2 * np.pi * i / n_drones
+            offset = (formation_center - self.asteroid.position +
+                      ring_radius * (np.cos(angle) * perp1 +
+                                     np.sin(angle) * perp2))
+
+            offsets.append(offset)
+
+        # Return a list of offset vectors — one per drone. These get stored in each Drone object as formation_offset
+        return offsets
 
     def compute_lagrange_point(self, point='L4'):
         # computes L4/L5 position
@@ -240,5 +379,53 @@ class InterceptionCalculator:
     def plan_mission(self):
         # master method — calls everything above
         # returns complete mission plan
-        pass
+
+        # Search 180 days -> launch window call... Default: self.find_launch_window()
+        launch_window = self.find_launch_window(search_days=180)
+        if launch_window is None:
+            print(f'Error!! Launch Window Not Found')
+            return None
+
+        lagrange_pos = self.compute_lagrange_point(point=self.asteroid.target_lagrange)
+
+        transfer = self.compute_transfer_to_lagrange(lagrange_pos)
+        time_available = 2.0  # years — estimate for capture phase
+        drone_count = self.rocket.get_drone_count(self.asteroid, lagrange_pos, time_available)
+        formation = self.compute_drone_formation(drone_count, lagrange_pos)
+
+        # Total delta-v across all mission phases
+        dv_launch = launch_window['delta_v']
+        dv_return = transfer['delta_v']
+        dv_total = dv_launch + dv_return
+
+        # Mission summary
+        print(f"\n{'=' * 50}")
+        print(f"MISSION PLAN: {self.asteroid.name}")
+        print(f"{'=' * 50}")
+        print(f"Launch time:     {launch_window['launch_time']:.3f} years")
+        print(f"Arrival time:    {launch_window['arrival_time']:.3f} years")
+        print(f"Flight time:     {launch_window['tof']:.3f} years")
+        print(f"ΔV launch:       {dv_launch * 4.74057:.2f} km/s")
+        print(f"ΔV return:       {dv_return * 4.74057:.2f} km/s")
+        print(f"ΔV total:        {dv_total * 4.74057:.2f} km/s")
+        print(f"Drones needed:   {drone_count}")
+        print(f"Target:          {self.asteroid.target_lagrange}")
+        print(f"Feasible:        {launch_window['feasible']}")
+        print(f"{'=' * 50}\n")
+
+        return {
+            'launch_time': launch_window['launch_time'],
+            'arrival_time': launch_window['arrival_time'],
+            'tof': launch_window['tof'],
+            'delta_v_launch': dv_launch,
+            'delta_v_return': dv_return,
+            'delta_v_total': dv_total,
+            'feasible': launch_window['feasible'],
+            'n_drones': drone_count,
+            'drone_formation': formation,
+            'lagrange_point': lagrange_pos,
+            'v1': launch_window['v1'],
+            'v2': launch_window['v2'],
+        }
+
 

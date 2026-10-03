@@ -17,16 +17,12 @@ from visualizer import Visualizer
 from asteroid import Asteroid
 from asteroid_database import AsteroidDatabase
 from rocket import Rocket
+from interception import InterceptionCalculator
+from mission_runner import MissionRunner
 
 
 """
-change the viz = Visual() part around line 119 to use the other visual classes:
---> viz = Visual3d(vis_viva.radii, vis_viva.velocities, vis_viva.semiMajorAxis, inclination)
-            viz.run()
---> viz = VisualZoom(vis_viva.radii, vis_viva.velocities, vis_viva.semiMajorAxis)
-            viz.run()
---> viz = Visual(vis_viva.radii, vis_viva.velocities, vis_viva.semiMajorAxis)
-            viz.run()
+    Note about not having enough fuel: I dont intend for the rocket to be exactly like the falcon 9. I probably want enough fuel to get to the asteroid belt and then have 5-10% when returning. With the electric drones providing thrust we dont need to think of extra mass on the return trip. But in the future I will be interested on how long the capture to a lagrange point will take. For now 5-10% of fuel remaining after the trip is my goal. This will need to be dynamic depending on the target asteroid's distance. I probably will want to show and tell this before launch. Showing how much fuel is estimated to get to the target asteroid and then how much fuel has been allotted for the 5-10% threshold.
 """
 
 
@@ -165,10 +161,20 @@ def run_visualization(system_type, config, logger):
 
             # Masses in solar masses
             M_sun = 1.0
-            M_earth = 3.003e-6  # Earth/Sun mass ratio
-            M_moon = 3.694e-8
-            M_apo = 2.664e-20  # Apophis/Sun mass ratio
             M_rock = 2.761e-25  # Rocket/Sun mass ratio
+
+            M_moon = 3.694e-8
+            moon_inc = np.radians(5.145)
+            v_moon = 0.2148
+
+            # Earth — defines the ecliptic, zero inclination
+            earth_inc = 0.0
+            M_earth = 3.003e-6  # Earth/Sun mass ratio
+
+            # Apophis — 3.3° inclination to ecliptic
+            apo_inc = np.radians(3.3)
+            v_apo = 1.0552 * 2 * np.pi
+            M_apo = 2.664e-20  # Apophis/Sun mass ratio
 
             # Mass in kg, radius in m, position in km, and velocity in m/s.
             sun = CelestData(
@@ -188,9 +194,6 @@ def run_visualization(system_type, config, logger):
                 # Position in the x-axis plane(distance from the sun [x,y,z]).
                 # Orbital velocity(avg - 2pi(r)/T) in the y-axis plane(perpendicular to the x-axis plane. Think x,y,z graph).
             )
-            moon_inc = np.radians(5.145)
-            v_moon = 0.2148
-
             moon = CelestData(
                 name="Moon",
                 mass=M_moon,
@@ -202,44 +205,6 @@ def run_visualization(system_type, config, logger):
                     v_moon * np.sin(moon_inc)  # z component — inclination
                 ])
             )
-
-            # Earth — defines the ecliptic, zero inclination
-            earth_inc = 0.0
-
-            # Apophis — 3.3° inclination to ecliptic
-            apo_inc = np.radians(3.3)
-            v_apo = 1.0552 * 2 * np.pi
-
-            '''
-            asteroid = CelestData(
-                name="Apophis",
-                mass=M_apo,
-                radius=1.19e-9,
-                position=np.array([0.9227, 0.0, 0.0]),  # Apophis semi-major axis in AU
-                velocity=np.array([
-                    0.0,
-                    v_apo * np.cos(apo_inc),  # y component
-                    v_apo * np.sin(apo_inc)  # z component — this gives inclination
-                ])
-                # Using 99942 Apophis data for now until able to pull from database.
-                # 1.38e11 distance from sun to asteroid.
-            )
-            
-            apophis = Asteroid.from_orbital_elements(
-                name="Apophis",
-                mass=2.664e-20,
-                radius=1.19e-9,
-                a=0.9227,
-                e=0.1914,
-                i=3.339,
-                Omega=203.978,
-                omega=126.545,
-                M=270.0
-            )
-
-            print(apophis)  # test __repr__
-            '''
-
             rocket = CelestData(
                 name="Rocket",
                 mass=M_rock,
@@ -253,16 +218,6 @@ def run_visualization(system_type, config, logger):
                 # velocity=earth.velocity + np.array([0.0, 0.0, 0.0]) etc...
             )
 
-            """
-            # Quick debug
-            print(f"This is a debug statement for the rk4 program")
-            print(sun)
-            print(earth)
-            print(moon)
-            print(asteroid)
-            print(rocket)
-            """
-
             # initial positions before simulation runs
             # print(earth.position)
             # print(moon.position)
@@ -275,45 +230,55 @@ def run_visualization(system_type, config, logger):
                 exit()
             print(asteroid)
 
+            # Planning simulation — Rocket NOT included here.
+            # InterceptionCalculator only needs Rocket as a spec sheet (fuel, thrust),
+            # not as a body that needs to move in this simulation.
             bodies = [sun, earth, moon, asteroid]
-            # bodies = [sun, earth, moon, asteroid, rocket]
 
-            # Fixed mode — simple
-            rocket = Rocket(..., drone_mode='fixed', drone_count=10)
-
-            # Dynamic mode — scales to asteroid
-            rocket = Rocket(..., drone_mode='dynamic')
-            drone_count = rocket.get_drone_count(
-                asteroid=asteroid,
-                target_position=lagrange_point,
-                time_available=2.0  # years to complete capture
-            )
-            print(f"Drones needed: {drone_count}")
-
-
-            # Create integrator
-            # integrator = RK4Integrator()
             integrator = DOP853Integrator()
             start = time.time()
-            # Create and run simulation
             sim = Simulation(bodies, integrator)
-            # 5 year, 1 hour steps (in seconds) (more years, more noticeable orbital motion)
-            sim.run(t_total=5.0, dt=1 / 8766)
+            sim.run(t_total=5.0, dt=1 / (8766 * 4))  # tighter step needed for Moon
             end = time.time()
             print(f"Simulation took: {end - start:.1f} seconds")
             data = sim.get_results()
 
-            # Debug
-            print(f"Bodies in simulation: {list(data.positions.keys())}")
-            print(f"Moon positions stored: {len(data.positions['Moon'])}")
-            print(f"Moon position at index 100: {data.positions['Moon'][100]}")
-            print(f"Earth position at index 100: {data.positions['Earth'][100]}")
+            # Build the Rocket spec — Falcon 9 second stage real numbers, converted to AU/M☉/year
+            rocket = Rocket(
+                name="Rocket",
+                radius=1.24e-14,
+                dry_mass=2.011e-27,  # solar masses
+                fuel_mass=4.659e-26,  # solar masses
+                max_thrust=3.126e-24,  # AU·M☉/year²
+                exhaust_vel=0.7404,  # AU/year
+                position=earth.position + np.array([4.258e-5, 0.0, 0.0]),
+                velocity=earth.velocity.copy(),
+                reactor_power=1e-10,  # placeholder — refine later
+                reactor_fuel_mass=1.25696e-28,
+                drone_mode='fixed',  # or 'dynamic'
+                drone_capacity=10,
+            )
 
-            viz = Visualizer(data)
-            viz.run()
+            # Run planning simulation
+            sim = Simulation(bodies, integrator)
+            sim.run(t_total=5.0, dt=1 / (8766 * 4))
+            data = sim.get_results()  # ← right after sim.run()
 
-            # Get results for visualization
-            data = sim.get_results()
+            # Plan the mission
+            calc = InterceptionCalculator(rocket, asteroid, bodies, data)
+            mission_plan = calc.plan_mission()
+
+            if mission_plan is None:
+                print("Mission planning failed.")
+                exit()
+
+            print(f"Mission plan computed successfully for {asteroid.name}")
+
+            runner = MissionRunner(sun, earth, moon, asteroid, rocket, mission_plan, integrator)
+            merged_data = runner.run_full_mission()
+            if merged_data is not None:
+                 viz = Visualizer(merged_data, mission_plan)
+                 viz.run()
 
             logger.info("Running full system")
 

@@ -13,7 +13,7 @@ class Drone(CelestData):
     # Calling parent __init__ from CelestData
     def __init__(self, drone_id, mass, radius, position, velocity, parent_rocket, target_asteroid,
                  charge_rate=50.0, max_charge=1000.0, charge_level=1, thrust_mag=1e-30, cruise_speed=0.1,
-                 formation_offset=None):
+                 formation_offset=None, lagrange_point=None):
 
         super().__init__(name=f"Drone_{drone_id}", radius=radius, mass=mass,
                             position=position, velocity=velocity)
@@ -40,6 +40,7 @@ class Drone(CelestData):
         self.formation_offset = formation_offset if formation_offset is not None \
                                 else np.zeros(3)
         self.drone_id = drone_id
+        self.lagrange_point = lagrange_point  # set once when drone is created
 
     @property
     def thrust_vector(self):
@@ -122,10 +123,18 @@ class Drone(CelestData):
         self.position = self.target_asteroid.position + self.formation_offset
         self.velocity = self.target_asteroid.velocity.copy()
 
-        away = self.position - self.target_asteroid.position
-        dist = np.linalg.norm(away)
-        if dist > 0:
-            self.thrust_dir = away / dist
+        if self.lagrange_point is not None:
+            # Always push toward Lagrange point — recalculate each step
+            to_target = self.lagrange_point - self.target_asteroid.position
+            dist = np.linalg.norm(to_target)
+            if dist > 0:
+                self.thrust_dir = to_target / dist  # push toward target
+        else:
+            # Fallback — push away from asteroid center
+            away = self.position - self.target_asteroid.position
+            dist = np.linalg.norm(away)
+            if dist > 0:
+                self.thrust_dir = away / dist
 
         self.charge_level -= self.drain_rate * dt
         self.charge_level = max(0.0, self.charge_level)

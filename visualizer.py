@@ -5,8 +5,10 @@ import numpy as np
 
 class Visualizer:
 
-    def __init__(self, sim_data):
+    def __init__(self, sim_data, mission_plan=None):
         self.sim_data = sim_data
+
+        self.mission_plan = mission_plan
 
         # Default colors and sizes for all possible bodies
         DEFAULT_COLORS = {
@@ -177,13 +179,14 @@ class Visualizer:
     def _precompute_gl_positions(self):
         print("Precomputing trajectories...")
         self.gl_trajectories = {}
-        for name in self.COLORS:
+        for name in self.sim_data.positions:
             traj = self.sim_data.get_trajectory(name)
             self.gl_trajectories[name] = np.array(
                 [self._world_to_gl(p) for p in traj]
             )
             print(f"  Precomputed {name}: {len(self.gl_trajectories[name])} positions")
         print("Precompute Finished.")
+
     def setup_3d_camera(self):
         """
         Called every frame to position and orient the camera.
@@ -292,6 +295,150 @@ class Visualizer:
                     glBegin(GL_POINTS)
                     glVertex3f(pos[0], pos[1], pos[2])
                     glEnd()
+
+    def draw_lagrange_point(self):
+        # The Lagrange point is only meaningful in solar view and only when a mission plan exists
+        if self.mission_plan is None or self.camera_target != 'solar':
+            return
+
+        # Pull position from mission plan. Convert to  GL coordinates
+        position = self.mission_plan['lagrange_point']
+        gl_pos = self._world_to_gl(position)
+
+        # Draw a cyan cross shape using GL_LINES
+        size = 0.05  # AU — visible at solar scale
+        glLineWidth(2.0)
+        glColor3f(0.0, 1.0, 1.0)  # cyan
+
+        glBegin(GL_LINES)
+        # Horizontal arm
+        glVertex3f(gl_pos[0] - size, gl_pos[1], gl_pos[2])
+        glVertex3f(gl_pos[0] + size, gl_pos[1], gl_pos[2])
+        # Vertical arm
+        glVertex3f(gl_pos[0], gl_pos[1] - size, gl_pos[2])
+        glVertex3f(gl_pos[0], gl_pos[1] + size, gl_pos[2])
+        glEnd()
+
+        # Label on HUD surface
+        label_name = self.mission_plan.get('lagrange_target', 'L4')
+        screen_x, screen_y = self.world_to_screen(position)
+        label = self.font.render(label_name, True, (0, 255, 255, 255))
+        self.hud_surface.blit(label, (screen_x + 8, screen_y - 8))
+
+    def draw_mission_trajectory(self):
+        # Draws planned transfer arc from Earth departure to asteroid arrival
+        if self.mission_plan is None or self.camera_target != 'solar':
+            return
+
+        # Convert launch time to frame index
+        launch_frame = int(self.mission_plan['launch_time'] * 365.25 * 24)
+        arrival_frame = int((self.mission_plan['launch_time'] +
+                             self.mission_plan['tof']) * 365.25 * 24)
+
+        # Clamp to valid range
+        launch_frame = min(launch_frame, self.total_frames - 1)
+        arrival_frame = min(arrival_frame, self.total_frames - 1)
+
+        # Only draw from launch frame onward
+        if self.frame_index < launch_frame:
+            return
+
+        # Get departure and arrival positions
+        earth_traj = self.sim_data.get_trajectory('Earth')
+        r1 = earth_traj[launch_frame]
+
+        # Find asteroid name dynamically
+        asteroid_name = None
+        for name in self.sim_data.positions:
+            if name not in ['Sun', 'Earth', 'Moon', 'Rocket'] and \
+                    not name.startswith('Drone_'):
+                asteroid_name = name
+                break
+        if asteroid_name is None:
+            return
+
+        asteroid_traj = self.sim_data.get_trajectory(asteroid_name)
+        r2 = asteroid_traj[arrival_frame]
+
+        # Compute curved midpoint — pushed inward toward Sun
+        midpoint = (r1 + r2) / 2.0
+        direction_to_sun = -midpoint / np.linalg.norm(midpoint)
+        curve_offset = np.linalg.norm(midpoint) * 0.2 * direction_to_sun
+        midpoint_curved = midpoint + curve_offset
+
+        # Build 50-point quadratic Bezier arc r1 → midpoint_curved → r2
+        arc_points = []
+        for t in np.linspace(0.0, 1.0, 50):
+            pt = ((1 - t) ** 2 * r1 +
+                  2 * (1 - t) * t * midpoint_curved +
+                  t ** 2 * r2)
+            arc_points.append(self._world_to_gl(pt))
+
+        # Draw as dashed line — every other segment skipped
+        glLineWidth(1.0)
+        glColor4f(0.8, 0.8, 0.8, 0.5)  # light grey, semi-transparent
+        glBegin(GL_LINES)
+        for idx in range(0, len(arc_points) - 1, 2):  # skip every other pair
+            p1 = arc_points[idx]
+            p2 = arc_points[idx + 1]
+            glVertex3f(p1[0], p1[1], p1[2])
+            glVertex3f(p2[0], p2[1], p2[2])
+        glEnd()
+
+    def draw_drones(self):
+        # Only visible when zoomed into asteroid
+        if self.camera_target != 'asteroid':
+            return
+
+        # Find all drone names
+        drone_names = [n for n in self.sim_data.positions
+                       if n.startswith('Drone_')]
+        if not drone_names:
+            return
+
+        # Only draw during capture phase — after transit completes
+        if self.mission_plan is not None:
+            capture_start_time = (self.mission_plan['launch_time'] +
+                                  self.mission_plan['tof'])
+            current_time = self.sim_data.times[self.frame_index]
+            if current_time < capture_start_time:
+                return
+
+        # Find asteroid name for formation line endpoint
+        asteroid_name = None
+        for name in self.sim_data.positions:
+            if name not in ['Sun', 'Earth', 'Moon', 'Rocket'] and \
+                    not name.startswith('Drone_'):
+                asteroid_name = name
+                break
+
+        asteroid_pos = None
+        if asteroid_name and asteroid_name in self.gl_trajectories:
+            asteroid_pos = self.gl_trajectories[asteroid_name][self.frame_index]
+
+        # Draw each drone
+        glPointSize(5.0)
+        glColor3f(0.0, 1.0, 0.2)  # bright green
+
+        glBegin(GL_POINTS)
+        for name in drone_names:
+            if name in self.gl_trajectories:
+                pos = self.gl_trajectories[name][self.frame_index]
+                glVertex3f(pos[0], pos[1], pos[2])
+        glEnd()
+
+        # Optional formation lines from each drone back to asteroid center
+        if asteroid_pos is not None:
+            glLineWidth(0.5)
+            glColor4f(0.5, 0.5, 0.5, 0.3)  # dim grey, transparent
+            glBegin(GL_LINES)
+            for name in drone_names:
+                if name in self.gl_trajectories:
+                    pos = self.gl_trajectories[name][self.frame_index]
+                    glVertex3f(pos[0], pos[1], pos[2])
+                    glVertex3f(asteroid_pos[0], asteroid_pos[1], asteroid_pos[2])
+            glEnd()
+
 
     def _draw_sphere(self, position, radius):
         """
@@ -422,7 +569,7 @@ class Visualizer:
 
 # ////////////////////////////////////////////////////////////////////////////////////////////
 # ////////////////////////////////////////////////////////////////////////////////////////////
-# --------------------— OpenGL setup and 3D rendering  (built by Claude)---------------------------
+# --------------------— ^OpenGL setup and 3D rendering^  (built by Claude)---------------------------
 
     def handle_events(self):
         # Read keyboard input:
@@ -512,6 +659,9 @@ class Visualizer:
             # OpenGL camera and 3D scene as long as sim is not paused.
             self.setup_3d_camera()
             self.draw_3d_scene()
+            self.draw_lagrange_point()
+            self.draw_mission_trajectory()
+            self.draw_drones()
 
             # Clear HUD surface each frame — fully transparent
             self.hud_surface.fill((0, 0, 0, 0))
@@ -655,6 +805,45 @@ class Visualizer:
             current_vel = vel_array[self.frame_index]
             speed = np.linalg.norm(current_vel)
             draw_line(f"  {name}: {self._format_velocity(speed)}")
+
+            # --- Mission status (only when mission plan exists) ---
+            if self.mission_plan is not None:
+                draw_line("--- Mission ---")
+
+                # Determine current phase from simulation time
+                current_time = self.sim_data.times[self.frame_index]
+                launch_time = self.mission_plan['launch_time']
+                arrival_time = launch_time + self.mission_plan['tof']
+
+                if current_time < launch_time:
+                    phase = 'Pre-launch'
+                elif current_time < arrival_time:
+                    phase = 'Transit'
+                else:
+                    phase = 'Capture'
+
+                draw_line(f"  Phase:   {phase}")
+                draw_line(f"  Target:  {self.mission_plan.get('lagrange_target', 'L4')}")
+
+                # Drone count
+                n_drones = sum(1 for n in self.sim_data.positions
+                               if n.startswith('Drone_'))
+                if n_drones > 0:
+                    draw_line(f"  Drones:  {n_drones} active")
+
+                # Distance from asteroid to Lagrange point
+                lagrange_pos = self.mission_plan['lagrange_point']
+                asteroid_name = None
+                for name in self.sim_data.positions:
+                    if name not in ['Sun', 'Earth', 'Moon', 'Rocket'] and \
+                            not name.startswith('Drone_'):
+                        asteroid_name = name
+                        break
+
+                if asteroid_name:
+                    asteroid_pos = self.sim_data.get_trajectory(asteroid_name)[self.frame_index]
+                    dist_to_L = np.linalg.norm(asteroid_pos - lagrange_pos)
+                    draw_line(f"  {asteroid_name} → L4: {self._format_distance(dist_to_L)}")
 
         # Distances between bodies:
         draw_line("--- Distances ---")

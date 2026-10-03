@@ -36,6 +36,7 @@ class DOP853Integrator:
         # To loop through all steps/results scipy ran:
         # Stores every accepted time point in result.t
         # Stores the corresponding state vector at each point in result.y
+        prev_t = 0.0
         for i in range(len(result.t)):
             # result.t and result.y are numpy arrays
             # transposed shape is (n_state_variables, n_steps)
@@ -43,6 +44,14 @@ class DOP853Integrator:
             state = result.y[:, i]  # To get state at step i, [all rows, column i]
             # unpack, compute energy, store...
             state_vector.unpack(state, bodies)
+
+            # Drones need their mode/charge_level/thrust_dir to update every integration step
+            actual_dt = t - prev_t  # real elapsed time for this accepted step
+            for body in bodies:
+                if hasattr(body, 'update'):
+                    body.update(actual_dt)
+            prev_t = t
+
             energy = gravity.compute_total_energy(bodies)
             sim_data.store_step(t, bodies, energy)
 

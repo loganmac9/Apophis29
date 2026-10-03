@@ -2645,3 +2645,222 @@
 [2026-04-20 19:42:22.076] [22480] [INFO] Application finished successfully
 [2026-04-20 19:43:11.360] [22496] [INFO] Logging new session...
 [2026-04-20 19:43:12.474] [22496] [INFO] Application finished successfully
+[2026-04-21 13:54:37.149] [26220] [INFO] Logging new session...
+[2026-04-21 13:54:57.476] [26220] [INFO] Application finished successfully
+[2026-04-21 13:55:59.012] [26243] [INFO] Logging new session...
+[2026-04-21 13:57:08.541] [26243] [INFO] Application finished successfully
+[2026-05-07 15:43:11.610] [94733] [INFO] Logging new session...
+[2026-05-07 15:43:19.089] [94733] [INFO] Starting visualization for Earth/Sun System
+[2026-05-07 15:43:19.090] [94733] [INFO] The orbital velocity is: 30290.59810615189, at a radius of 147101680000.0
+[2026-05-07 15:43:19.090] [94733] [INFO] The orbital velocity is: 30280.37778484196, at a radius of 147152151111.1111
+[2026-05-07 15:43:19.090] [94733] [INFO] The orbital velocity is: 30270.161024772096, at a radius of 147202622222.22223
+[2026-05-07 15:43:19.090] [94733] [INFO] The orbital velocity is: 30259.94782233695, at a radius of 147253093333.33334
+[2026-05-07 15:43:19.091] [94733] [INFO] The orbital velocity is: 30249.73817393493, at a radius of 147303564444.44446
+[2026-05-07 15:43:19.091] [94733] [INFO] The orbital velocity is: 30239.532075968196, at a radius of 147354035555.55554
+[2026-05-07 15:43:19.091] [94733] [INFO] The orbital velocity is: 30229.32952484266, at a radius of 147404506666.66666
+[2026-05-07 15:43:19.091] [94733] [INFO] The orbital velocity is: 30219.130516967973, at a radius of 147454977777.77777
+[2026-05-07 15:43:19.091] [94733] [INFO] The orbital velocity is: 30208.93504875754, at a radius of 147505448888.8889
+[2026-05-07 15:43:19.092] [94733] [INFO] The orbital velocity is: 30198.743116628477, at a radius of 147555920000.0
+[2026-05-07 15:43:19.092] [94733] [INFO] The orbital velocity is: 30188.554717001643, at a radius of 147606391111.1111
+[2026-05-07 15:43:19.092] [94733] [INFO] The orbital velocity is: 30178.3698463016, at a radius of 147656862222.22223
+[2026-05-07 15:43:19.092] [94733] [INFO] The orbital velocity is: 30168.188500956647, at a radius of 147707333333.33334
+[2026-05-07 15:43:19.092] [94733] [INFO] The orbital velocity is: 30158.01067739876, at a radius of 147757804444.44446
+[2026-05-07 15:43:19.092] [94733] [INFO] The orbital velocity is: 30147.836372063637, at a radius of 147808275555.55554
+[2026-05-07 15:43:19.093] [94733] [INFO] The orbital velocity is: 30137.665581390655, at a radius of 147858746666.66666
+[2026-05-07 15:43:19.093] [94733] [INFO] The orbital velocity is: 30127.49830182288, at a radius of 147909217777.77777
+[2026-05-07 15:43:19.093] [94733] [INFO] The orbital velocity is: 30117.33452980708, at a radius of 147959688888.8889
+[2026-05-07 15:43:19.093] [94733] [INFO] The orbital velocity is: 30107.174261793676, at a radius of 148010160000.0
+[2026-05-07 15:43:19.093] [94733] [INFO] The orbital velocity is: 30097.01749423676, at a radius of 148060631111.1111
+[2026-05-07 15:43:19.093] [94733] [INFO] The orbital velocity is: 30086.864223594097, at a radius of 148111102222.22223
+[2026-05-07 15:43:19.093] [94733] [INFO] The orbital velocity is: 30076.714446327103, at a radius of 148161573333.33334
+[2026-05-07 15:43:19.093] [94733] [INFO] The orbital velocity is: 30066.56815890085, at a radius of 148212044444.44446
+[2026-05-07 15:43:19.093] [94733] [INFO] The orbital velocity is: 30056.42535778405, at a radius of 148262515555.55554
+[2026-05-07 15:43:19.094] [94733] [INFO] The orbital velocity is: 30046.28603944904, at a radius of 148312986666.66666
+[2026-05-07 15:43:19.094] [94733] [INFO] The orbital velocity is: 30036.150200371812, at a radius of 148363457777.77777
+[2026-05-07 15:43:19.094] [94733] [INFO] The orbital velocity is: 30026.017837031977, at a radius of 148413928888.8889
+[2026-05-07 15:43:19.094] [94733] [INFO] The orbital velocity is: 30015.888945912757, at a radius of 148464400000.0
+[2026-05-07 15:43:19.094] [94733] [INFO] The orbital velocity is: 30005.76352350099, at a radius of 148514871111.1111
+[2026-05-07 15:43:19.094] [94733] [INFO] The orbital velocity is: 29995.641566287133, at a radius of 148565342222.22223
+[2026-05-07 15:43:19.094] [94733] [INFO] The orbital velocity is: 29985.523070765237, at a radius of 148615813333.33334
+[2026-05-07 15:43:19.094] [94733] [INFO] The orbital velocity is: 29975.408033432945, at a radius of 148666284444.44446
+[2026-05-07 15:43:19.095] [94733] [INFO] The orbital velocity is: 29965.2964507915, at a radius of 148716755555.55554
+[2026-05-07 15:43:19.095] [94733] [INFO] The orbital velocity is: 29955.188319345707, at a radius of 148767226666.66666
+[2026-05-07 15:43:19.095] [94733] [INFO] The orbital velocity is: 29945.083635603973, at a radius of 148817697777.77777
+[2026-05-07 15:43:19.095] [94733] [INFO] The orbital velocity is: 29934.982396078263, at a radius of 148868168888.8889
+[2026-05-07 15:43:19.095] [94733] [INFO] The orbital velocity is: 29924.88459728411, at a radius of 148918640000.0
+[2026-05-07 15:43:19.095] [94733] [INFO] The orbital velocity is: 29914.79023574061, at a radius of 148969111111.1111
+[2026-05-07 15:43:19.095] [94733] [INFO] The orbital velocity is: 29904.699307970408, at a radius of 149019582222.22223
+[2026-05-07 15:43:19.095] [94733] [INFO] The orbital velocity is: 29894.611810499693, at a radius of 149070053333.33334
+[2026-05-07 15:43:19.095] [94733] [INFO] The orbital velocity is: 29884.527739858204, at a radius of 149120524444.44446
+[2026-05-07 15:43:19.096] [94733] [INFO] The orbital velocity is: 29874.44709257922, at a radius of 149170995555.55554
+[2026-05-07 15:43:19.096] [94733] [INFO] The orbital velocity is: 29864.369865199515, at a radius of 149221466666.66666
+[2026-05-07 15:43:19.096] [94733] [INFO] The orbital velocity is: 29854.296054259434, at a radius of 149271937777.77777
+[2026-05-07 15:43:19.096] [94733] [INFO] The orbital velocity is: 29844.22565630281, at a radius of 149322408888.8889
+[2026-05-07 15:43:19.096] [94733] [INFO] The orbital velocity is: 29834.158667876996, at a radius of 149372880000.0
+[2026-05-07 15:43:19.096] [94733] [INFO] The orbital velocity is: 29824.095085532845, at a radius of 149423351111.1111
+[2026-05-07 15:43:19.096] [94733] [INFO] The orbital velocity is: 29814.034905824723, at a radius of 149473822222.22223
+[2026-05-07 15:43:19.096] [94733] [INFO] The orbital velocity is: 29803.978125310474, at a radius of 149524293333.33334
+[2026-05-07 15:43:19.096] [94733] [INFO] The orbital velocity is: 29793.924740551436, at a radius of 149574764444.44446
+[2026-05-07 15:43:19.097] [94733] [INFO] The orbital velocity is: 29783.87474811245, at a radius of 149625235555.55554
+[2026-05-07 15:43:19.097] [94733] [INFO] The orbital velocity is: 29773.82814456178, at a radius of 149675706666.66666
+[2026-05-07 15:43:19.097] [94733] [INFO] The orbital velocity is: 29763.78492647122, at a radius of 149726177777.77777
+[2026-05-07 15:43:19.097] [94733] [INFO] The orbital velocity is: 29753.745090415996, at a radius of 149776648888.8889
+[2026-05-07 15:43:19.097] [94733] [INFO] The orbital velocity is: 29743.708632974794, at a radius of 149827120000.0
+[2026-05-07 15:43:19.097] [94733] [INFO] The orbital velocity is: 29733.67555072976, at a radius of 149877591111.1111
+[2026-05-07 15:43:19.097] [94733] [INFO] The orbital velocity is: 29723.645840266487, at a radius of 149928062222.22223
+[2026-05-07 15:43:19.097] [94733] [INFO] The orbital velocity is: 29713.61949817401, at a radius of 149978533333.33334
+[2026-05-07 15:43:19.097] [94733] [INFO] The orbital velocity is: 29703.59652104479, at a radius of 150029004444.44446
+[2026-05-07 15:43:19.098] [94733] [INFO] The orbital velocity is: 29693.576905474732, at a radius of 150079475555.55554
+[2026-05-07 15:43:19.098] [94733] [INFO] The orbital velocity is: 29683.56064806315, at a radius of 150129946666.66666
+[2026-05-07 15:43:19.098] [94733] [INFO] The orbital velocity is: 29673.547745412787, at a radius of 150180417777.77777
+[2026-05-07 15:43:19.098] [94733] [INFO] The orbital velocity is: 29663.538194129796, at a radius of 150230888888.8889
+[2026-05-07 15:43:19.098] [94733] [INFO] The orbital velocity is: 29653.531990823732, at a radius of 150281360000.0
+[2026-05-07 15:43:19.098] [94733] [INFO] The orbital velocity is: 29643.529132107553, at a radius of 150331831111.1111
+[2026-05-07 15:43:19.098] [94733] [INFO] The orbital velocity is: 29633.529614597614, at a radius of 150382302222.22223
+[2026-05-07 15:43:19.098] [94733] [INFO] The orbital velocity is: 29623.53343491366, at a radius of 150432773333.33334
+[2026-05-07 15:43:19.098] [94733] [INFO] The orbital velocity is: 29613.540589678818, at a radius of 150483244444.44446
+[2026-05-07 15:43:19.099] [94733] [INFO] The orbital velocity is: 29603.551075519597, at a radius of 150533715555.55554
+[2026-05-07 15:43:19.099] [94733] [INFO] The orbital velocity is: 29593.564889065867, at a radius of 150584186666.66666
+[2026-05-07 15:43:19.099] [94733] [INFO] The orbital velocity is: 29583.582026950877, at a radius of 150634657777.77777
+[2026-05-07 15:43:19.099] [94733] [INFO] The orbital velocity is: 29573.60248581122, at a radius of 150685128888.8889
+[2026-05-07 15:43:19.099] [94733] [INFO] The orbital velocity is: 29563.626262286878, at a radius of 150735600000.0
+[2026-05-07 15:43:19.099] [94733] [INFO] The orbital velocity is: 29553.653353021138, at a radius of 150786071111.1111
+[2026-05-07 15:43:19.099] [94733] [INFO] The orbital velocity is: 29543.683754660673, at a radius of 150836542222.22223
+[2026-05-07 15:43:19.099] [94733] [INFO] The orbital velocity is: 29533.71746385546, at a radius of 150887013333.33334
+[2026-05-07 15:43:19.100] [94733] [INFO] The orbital velocity is: 29523.75447725883, at a radius of 150937484444.44446
+[2026-05-07 15:43:19.100] [94733] [INFO] The orbital velocity is: 29513.79479152744, at a radius of 150987955555.55554
+[2026-05-07 15:43:19.100] [94733] [INFO] The orbital velocity is: 29503.838403321246, at a radius of 151038426666.66666
+[2026-05-07 15:43:19.100] [94733] [INFO] The orbital velocity is: 29493.885309303558, at a radius of 151088897777.77777
+[2026-05-07 15:43:19.100] [94733] [INFO] The orbital velocity is: 29483.935506140955, at a radius of 151139368888.8889
+[2026-05-07 15:43:19.100] [94733] [INFO] The orbital velocity is: 29473.988990503352, at a radius of 151189840000.0
+[2026-05-07 15:43:19.101] [94733] [INFO] The orbital velocity is: 29464.045759063953, at a radius of 151240311111.1111
+[2026-05-07 15:43:19.101] [94733] [INFO] The orbital velocity is: 29454.10580849925, at a radius of 151290782222.22223
+[2026-05-07 15:43:19.101] [94733] [INFO] The orbital velocity is: 29444.169135489028, at a radius of 151341253333.33334
+[2026-05-07 15:43:19.101] [94733] [INFO] The orbital velocity is: 29434.235736716357, at a radius of 151391724444.44446
+[2026-05-07 15:43:19.101] [94733] [INFO] The orbital velocity is: 29424.30560886758, at a radius of 151442195555.55554
+[2026-05-07 15:43:19.101] [94733] [INFO] The orbital velocity is: 29414.378748632305, at a radius of 151492666666.66666
+[2026-05-07 15:43:19.101] [94733] [INFO] The orbital velocity is: 29404.455152703416, at a radius of 151543137777.77777
+[2026-05-07 15:43:19.101] [94733] [INFO] The orbital velocity is: 29394.53481777706, at a radius of 151593608888.8889
+[2026-05-07 15:43:19.102] [94733] [INFO] The orbital velocity is: 29384.61774055263, at a radius of 151644080000.0
+[2026-05-07 15:43:19.102] [94733] [INFO] The orbital velocity is: 29374.703917732764, at a radius of 151694551111.1111
+[2026-05-07 15:43:19.102] [94733] [INFO] The orbital velocity is: 29364.79334602336, at a radius of 151745022222.22223
+[2026-05-07 15:43:19.102] [94733] [INFO] The orbital velocity is: 29354.88602213355, at a radius of 151795493333.33334
+[2026-05-07 15:43:19.102] [94733] [INFO] The orbital velocity is: 29344.981942775677, at a radius of 151845964444.44446
+[2026-05-07 15:43:19.102] [94733] [INFO] The orbital velocity is: 29335.08110466535, at a radius of 151896435555.55554
+[2026-05-07 15:43:19.102] [94733] [INFO] The orbital velocity is: 29325.18350452136, at a radius of 151946906666.66666
+[2026-05-07 15:43:19.102] [94733] [INFO] The orbital velocity is: 29315.289139065746, at a radius of 151997377777.77777
+[2026-05-07 15:43:19.102] [94733] [INFO] The orbital velocity is: 29305.39800502374, at a radius of 152047848888.8889
+[2026-05-07 15:43:19.103] [94733] [INFO] The orbital velocity is: 29295.51009912379, at a radius of 152098320000.0
+[2026-05-07 15:43:47.450] [94733] [INFO] Visualization for Earth/Sun System completed
+[2026-05-07 15:44:45.169] [94733] [INFO] Application finished successfully
+[2026-05-07 15:53:45.708] [94900] [INFO] Logging new session...
+[2026-05-07 15:53:51.098] [94900] [INFO] Starting visualization for Full System
+[2026-05-07 16:01:32.856] [95002] [INFO] Logging new session...
+[2026-05-07 16:05:39.768] [95002] [INFO] Starting visualization for Full System
+[2026-05-07 16:07:24.529] [95002] [INFO] Application finished successfully
+[2026-05-07 16:07:29.176] [95080] [INFO] Logging new session...
+[2026-05-07 16:07:34.581] [95080] [INFO] Starting visualization for Full System
+[2026-05-07 16:09:37.816] [95104] [INFO] Logging new session...
+[2026-05-07 16:09:41.939] [95104] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-07 16:36:32.871] [95399] [INFO] Logging new session...
+[2026-05-07 16:36:36.021] [95399] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-07 17:10:28.619] [95727] [INFO] Logging new session...
+[2026-05-07 17:10:31.327] [95727] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-07 17:51:39.345] [96126] [INFO] Logging new session...
+[2026-05-07 17:51:41.985] [96126] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-07 17:57:46.387] [96191] [INFO] Logging new session...
+[2026-05-07 17:57:49.313] [96191] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-07 17:58:32.306] [96212] [INFO] Logging new session...
+[2026-05-07 17:58:53.161] [96217] [INFO] Logging new session...
+[2026-05-07 17:58:55.413] [96217] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-07 18:04:23.222] [96279] [INFO] Logging new session...
+[2026-05-07 18:04:24.468] [96279] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-07 18:38:20.687] [96617] [INFO] Logging new session...
+[2026-05-07 18:38:25.668] [96617] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-07 18:51:14.686] [96748] [INFO] Logging new session...
+[2026-05-07 18:51:17.188] [96748] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-22 15:43:40.645] [65328] [INFO] Logging new session...
+[2026-05-22 15:43:58.212] [65328] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-25 17:16:38.316] [75973] [INFO] Logging new session...
+[2026-05-25 17:16:42.781] [75973] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-25 17:16:56.249] [75973] [ERROR] Error running visualization for Full System (Integrator Method): 'AsteroidDatabase' object has no attribute 'date'
+[2026-05-25 17:36:55.517] [76193] [INFO] Logging new session...
+[2026-05-25 17:36:58.387] [76193] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-25 17:37:04.696] [76193] [ERROR] Error running visualization for Full System (Integrator Method): asteroid.Asteroid.from_orbital_elements() argument after ** must be a mapping, not NoneType
+[2026-05-25 17:38:17.001] [76218] [INFO] Logging new session...
+[2026-05-25 17:38:20.120] [76218] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 15:09:38.882] [79660] [INFO] Logging new session...
+[2026-05-26 15:09:42.848] [79660] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 15:10:38.082] [79673] [INFO] Logging new session...
+[2026-05-26 15:10:41.529] [79673] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 15:24:17.147] [79858] [INFO] Logging new session...
+[2026-05-26 15:24:19.515] [79858] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 15:27:19.799] [79858] [ERROR] Error running visualization for Full System (Integrator Method): 'Apophis'
+[2026-05-26 15:37:17.574] [80035] [INFO] Logging new session...
+[2026-05-26 15:37:21.475] [80035] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 15:48:55.131] [80165] [INFO] Logging new session...
+[2026-05-26 15:49:15.262] [80165] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 15:50:19.784] [80179] [INFO] Logging new session...
+[2026-05-26 15:50:24.138] [80179] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 15:50:28.014] [80179] [ERROR] Error running visualization for Full System (Integrator Method): list index out of range
+[2026-05-26 15:50:37.165] [80179] [INFO] Application finished successfully
+[2026-05-26 15:50:45.575] [80186] [INFO] Logging new session...
+[2026-05-26 15:50:47.714] [80186] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 15:50:54.608] [80186] [ERROR] Error running visualization for Full System (Integrator Method): list index out of range
+[2026-05-26 15:53:10.962] [80216] [INFO] Logging new session...
+[2026-05-26 15:53:14.126] [80216] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 15:53:27.223] [80216] [ERROR] Error running visualization for Full System (Integrator Method): 'NoneType' object has no attribute 'name'
+[2026-05-26 15:56:08.584] [80263] [INFO] Logging new session...
+[2026-05-26 15:56:09.933] [80263] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 15:56:22.504] [80263] [ERROR] Error running visualization for Full System (Integrator Method): 'NoneType' object has no attribute 'name'
+[2026-05-26 16:02:51.637] [80356] [INFO] Logging new session...
+[2026-05-26 16:02:53.404] [80356] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 16:19:51.140] [80586] [INFO] Logging new session...
+[2026-05-26 16:19:53.338] [80586] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 16:20:23.515] [80595] [INFO] Logging new session...
+[2026-05-26 16:20:25.074] [80595] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 16:25:27.447] [80668] [INFO] Logging new session...
+[2026-05-26 16:25:29.805] [80668] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 16:26:08.881] [80679] [INFO] Logging new session...
+[2026-05-26 16:26:11.262] [80679] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 16:35:35.303] [80783] [INFO] Logging new session...
+[2026-05-26 16:35:38.363] [80783] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 16:35:57.712] [80791] [INFO] Logging new session...
+[2026-05-26 16:35:59.342] [80791] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 16:36:55.201] [80804] [INFO] Logging new session...
+[2026-05-26 16:36:56.796] [80804] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 16:40:28.455] [80842] [INFO] Logging new session...
+[2026-05-26 16:40:31.078] [80842] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-05-26 16:44:41.610] [80842] [ERROR] Error running visualization for Full System (Integrator Method): 'Apophis'
+[2026-05-27 14:00:29.161] [84146] [INFO] Logging new session...
+[2026-05-27 14:00:32.245] [84146] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-06-19 14:58:17.586] [9774] [INFO] Logging new session...
+[2026-06-19 14:58:22.411] [9774] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-06-19 15:07:01.401] [9836] [INFO] Logging new session...
+[2026-06-19 15:07:04.053] [9836] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-06-19 15:42:28.938] [9966] [INFO] Logging new session...
+[2026-06-19 15:42:31.189] [9966] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-09-29 15:50:31.719] [43522] [INFO] Logging new session...
+[2026-09-29 15:50:37.654] [43522] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-09-29 15:53:21.714] [43522] [ERROR] Error running visualization for Full System (Integrator Method): cannot access local variable 'prev_t' where it is not associated with a value
+[2026-09-29 16:00:40.885] [43650] [INFO] Logging new session...
+[2026-09-29 16:00:43.093] [43650] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-09-29 16:06:29.030] [43650] [ERROR] Error running visualization for Full System (Integrator Method): MissionRunner.__init__() missing 2 required positional arguments: 'mission_plan' and 'integrator'
+[2026-09-29 16:29:21.465] [43791] [INFO] Logging new session...
+[2026-09-29 16:29:24.453] [43791] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-09-29 16:35:06.431] [43791] [ERROR] Error running visualization for Full System (Integrator Method): MissionRunner.__init__() missing 2 required positional arguments: 'mission_plan' and 'integrator'
+[2026-09-29 17:29:13.610] [44037] [INFO] Logging new session...
+[2026-09-29 17:29:15.754] [44037] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-09-29 17:34:47.081] [44037] [ERROR] Error running visualization for Full System (Integrator Method): MissionRunner.__init__() missing 2 required positional arguments: 'mission_plan' and 'integrator'
+[2026-09-30 18:14:03.260] [46212] [INFO] Logging new session...
+[2026-09-30 18:16:31.813] [46212] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-09-30 18:23:12.025] [46212] [INFO] Running full system
+[2026-09-30 18:42:05.926] [46423] [INFO] Logging new session...
+[2026-09-30 18:42:11.011] [46423] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-09-30 18:48:14.760] [46423] [INFO] Running full system
+[2026-09-30 19:01:50.444] [46486] [INFO] Logging new session...
+[2026-09-30 19:02:15.821] [46486] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-09-30 19:08:14.341] [46486] [INFO] Running full system
+[2026-10-02 15:06:33.524] [1308] [INFO] Logging new session...
+[2026-10-02 15:06:42.172] [1308] [INFO] Starting visualization for Full System (Integrator Method)
+[2026-10-02 15:12:34.278] [1308] [INFO] Running full system
