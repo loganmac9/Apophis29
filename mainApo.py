@@ -2,28 +2,18 @@ import argparse
 import sys
 import numpy as np
 import time
+import traceback
 from config import ConfigManager
 from logger import Logger
-#from Visual import Visual
-#from visualZOOM import VisualZoom
-from visual3d import Visual3D
-from visVivaE import VisVivaEarth
-from visVivaM import VisVivaMoon
 from celestData import CelestData
-from rk4_integrator import RK4Integrator
+#from rk4_integrator import RK4Integrator
 from dop853_integrator import DOP853Integrator
 from simulation import Simulation
 from visualizer import Visualizer
-from asteroid import Asteroid
 from asteroid_database import AsteroidDatabase
 from rocket import Rocket
 from interception import InterceptionCalculator
 from mission_runner import MissionRunner
-
-
-"""
-    Note about not having enough fuel: I dont intend for the rocket to be exactly like the falcon 9. I probably want enough fuel to get to the asteroid belt and then have 5-10% when returning. With the electric drones providing thrust we dont need to think of extra mass on the return trip. But in the future I will be interested on how long the capture to a lagrange point will take. For now 5-10% of fuel remaining after the trip is my goal. This will need to be dynamic depending on the target asteroid's distance. I probably will want to show and tell this before launch. Showing how much fuel is estimated to get to the target asteroid and then how much fuel has been allotted for the 5-10% threshold.
-"""
 
 
 def setup_configuration():
@@ -36,30 +26,12 @@ def setup_configuration():
     config.create_key_value("write_to_console", "true", "Enable/disable console logging")
     config.create_key_value("log_level", "DEBUG", "Logging level")
 
-    # Earth-Sun orbital parameters
-    config.create_key_value("earth_sun_semi_major_axis", "149.6e9", "Earth-Sun semi-major axis in meters")
-    config.create_key_value("earth_sun_eccentricity", "0.0167", "Earth-Sun orbital eccentricity")
-    config.create_key_value("earth_sun_inclination", "7.155", "Earth-Sun orbital inclination in degrees")
-    config.create_key_value("earth_sun_num_points", "100", "Number of points to calculate in orbit")
-    config.create_key_value("sun_mass", "1.989e30", "Sun mass in kg")
-    config.create_key_value("earth_mass", "5.97e24", "Earth mass in kg")
-
-    # Earth-Moon orbital parameters
-    config.create_key_value("earth_moon_semi_major_axis", "384.4e6", "Earth-Moon semi-major axis in meters")
-    config.create_key_value("earth_moon_eccentricity", "0.0549", "Earth-Moon orbital eccentricity")
-    config.create_key_value("earth_moon_inclination", "5.145", "Earth-Moon orbital inclination in degrees")
-    config.create_key_value("earth_moon_num_points", "100", "Number of points to calculate in orbit")
-    config.create_key_value("moon_mass", "7.346e22", "Moon mass in kg")
-
-    # Gravitational constant
-    config.create_key_value("gravitational_constant", "6.67430e-11", "Universal gravitational constant")
-
     return config
 
 
 def get_available_systems():
     """Get list of available orbital systems"""
-    return ["Earth/Sun System (Vis-Viva)", "Earth/Moon System (Vis-Viva)", "Full System (Integrator Method)"]
+    return ["Full System (Integrator Method)"]
 
 
 def display_menu(available_systems):
@@ -114,67 +86,16 @@ def run_visualization(system_type, config, logger):
 
         logger.info(f"Starting visualization for {system_type}")
 
-        if system_type == "Earth/Sun System (Vis-Viva)":
-            # Get parameters from config
-            G = float(config.get_value("gravitational_constant"))
-            M = float(config.get_value("sun_mass"))
-            a = float(config.get_value("earth_sun_semi_major_axis"))
-            e = float(config.get_value("earth_sun_eccentricity"))
-            inclination = float(config.get_value("earth_sun_inclination"))
-            num_points = int(config.get_value("earth_sun_num_points"))
-
-            # Create VisVivaEarth instance and calculate orbital data
-            vis_vivaE = VisVivaEarth(G, M, a, e, num_points, logger)
-            vis_vivaE.getVelocity()
-
-            # Optional: print orbital parameters
-            # vis_viva.printVal()
-
-            vizE = Visual3D(vis_vivaE.radii, vis_vivaE.velocities, vis_vivaE.semiMajorAxis, inclination)
-            vizE.run()
-
-            logger.info(f"Visualization for {system_type} completed")
-
-        elif system_type == "Earth/Moon System (Vis-Viva)":
-            # Get parameters from config
-            G = float(config.get_value("gravitational_constant"))
-            M = float(config.get_value("earth_mass"))
-            a = float(config.get_value("earth_moon_semi_major_axis"))
-            e = float(config.get_value("earth_moon_eccentricity"))
-            inclination = float(config.get_value("earth_moon_inclination"))
-            num_points = int(config.get_value("earth_moon_num_points"))
-
-            vis_vivaM = VisVivaMoon(G, M, a, e, num_points, logger)
-            vis_vivaM.getVelocity()
-
-            vizM = Visual3D(vis_vivaM.radii, vis_vivaM.velocities, vis_vivaM.semiMajorAxis, inclination)
-            vizM.run()
-
-            logger.info(f"Visualization for {system_type} completed")
-
-        elif system_type == "Full System (Integrator Method)":
+        if system_type == "Full System (Integrator Method)":
             print("\nFull System Starting.")
-            print(f"*******************RK integrator need to be put into user methods*******************")
-            # Time
-            t_total = 5.0  # 5 years
-            dt = 1 / 8766  # 1 hour in years (8766 hours per year)
 
+            # defines the ecliptic, inclination
             # Masses in solar masses
             M_sun = 1.0
-            M_rock = 2.761e-25  # Rocket/Sun mass ratio
-
             M_moon = 3.694e-8
+            M_earth = 3.003e-6  # Earth/Sun mass ratio
             moon_inc = np.radians(5.145)
             v_moon = 0.2148
-
-            # Earth — defines the ecliptic, zero inclination
-            earth_inc = 0.0
-            M_earth = 3.003e-6  # Earth/Sun mass ratio
-
-            # Apophis — 3.3° inclination to ecliptic
-            apo_inc = np.radians(3.3)
-            v_apo = 1.0552 * 2 * np.pi
-            M_apo = 2.664e-20  # Apophis/Sun mass ratio
 
             # Mass in kg, radius in m, position in km, and velocity in m/s.
             sun = CelestData(
@@ -205,44 +126,6 @@ def run_visualization(system_type, config, logger):
                     v_moon * np.sin(moon_inc)  # z component — inclination
                 ])
             )
-            rocket = CelestData(
-                name="Rocket",
-                mass=M_rock,
-                radius=1.24e-14,
-                position=earth.position + np.array([4.258e-5, 0.0, 0.0]),  # Earth surface in AU
-                velocity=earth.velocity.copy()
-                # Position in the x-axis plane(distance from the sun). Based off the Falcon 9 rocket.
-                # .copy() gives rocket its own independent array in memory
-                # Without it, rocket and earth share the same array —
-                # if one moves, the other would move with it
-                # velocity=earth.velocity + np.array([0.0, 0.0, 0.0]) etc...
-            )
-
-            # initial positions before simulation runs
-            # print(earth.position)
-            # print(moon.position)
-
-            dataB = AsteroidDatabase()
-            asteroidName = input("Enter an asteroid name: ")
-            asteroid = dataB.fetch(asteroidName)
-            if asteroid is None:
-                print(f"Could not find asteroid: {asteroidName}")
-                exit()
-            print(asteroid)
-
-            # Planning simulation — Rocket NOT included here.
-            # InterceptionCalculator only needs Rocket as a spec sheet (fuel, thrust),
-            # not as a body that needs to move in this simulation.
-            bodies = [sun, earth, moon, asteroid]
-
-            integrator = DOP853Integrator()
-            start = time.time()
-            sim = Simulation(bodies, integrator)
-            sim.run(t_total=5.0, dt=1 / (8766 * 4))  # tighter step needed for Moon
-            end = time.time()
-            print(f"Simulation took: {end - start:.1f} seconds")
-            data = sim.get_results()
-
             # Build the Rocket spec — Falcon 9 second stage real numbers, converted to AU/M☉/year
             rocket = Rocket(
                 name="Rocket",
@@ -259,10 +142,54 @@ def run_visualization(system_type, config, logger):
                 drone_capacity=10,
             )
 
-            # Run planning simulation
+            """
+                Note about not having enough fuel: I dont intend for the rocket to be exactly like the falcon 9. 
+                I probably want enough fuel to get to the asteroid belt and then have 5-10% when returning. 
+                With the electric drones providing thrust we dont need to think of extra mass on the return trip. 
+                But in the future I will be interested on how long the capture to a lagrange point will take. 
+                For now 5-10% of fuel remaining after the trip is my goal. 
+                This will need to be dynamic depending on the target asteroid's distance. 
+                I probably will want to show and tell this before launch. 
+                Showing how much fuel is estimated to get to the target asteroid and 
+                then how much fuel has been allotted for the 5-10% threshold.
+            """
+
+            # ---------------------------------------------------------------------------
+            # Asteroid database set up:
+            dataB = AsteroidDatabase()
+            asteroidName = input("Enter an asteroid name: ")
+            asteroid = dataB.fetch(asteroidName)
+            if asteroid is None:
+                print(f"Could not find asteroid: {asteroidName}")
+                return
+            print(asteroid)
+            # ---------------------------------------------------------------------------
+
+            # Planning simulation — Rocket NOT included here.
+            # InterceptionCalculator only needs Rocket as a spec sheet (fuel, thrust),
+            # not as a body that needs to move in this simulation.
+            bodies = [sun, earth, moon, asteroid]
+            integrator = DOP853Integrator()
+            start = time.time()
+            # before the planning simulation
+            initial_states = {b.name: (b.position.copy(), b.velocity.copy()) for b in bodies}
+
+            # ---------------------------------------------------------------------------
+            # Run Sim:
             sim = Simulation(bodies, integrator)
-            sim.run(t_total=5.0, dt=1 / (8766 * 4))
-            data = sim.get_results()  # ← right after sim.run()
+            sim.run(t_total=5.0, dt=1 / (8766 * 4))  # tighter step needed for Moon
+            end = time.time()
+            print(f"Simulation took: {end - start:.1f} seconds")
+            data = sim.get_results()
+            # ---------------------------------------------------------------------------
+
+            # ---------------------------------------------------------------------------
+            # Interception Starts:
+            # restore sets t=0, before InterceptionCalculator runs
+            for b in bodies:
+                pos, vel = initial_states[b.name]
+                b.position = pos.copy()
+                b.velocity = vel.copy()
 
             # Plan the mission
             calc = InterceptionCalculator(rocket, asteroid, bodies, data)
@@ -270,7 +197,7 @@ def run_visualization(system_type, config, logger):
 
             if mission_plan is None:
                 print("Mission planning failed.")
-                exit()
+                return
 
             print(f"Mission plan computed successfully for {asteroid.name}")
 
@@ -280,43 +207,15 @@ def run_visualization(system_type, config, logger):
                  viz = Visualizer(merged_data, mission_plan)
                  viz.run()
 
-            logger.info("Running full system")
-
     except Exception as e:
-        print(f"Error running visualization for {system_type}: {e}")
-        logger.error(f"Error running visualization for {system_type}: {e}")
-
-# Debug:
-# Earth's position after the simulation verifying its movement:
-#trajectory = data.get_trajectory("Earth")
-#print(f"Earth start: {trajectory[0]}")
-#print(f"Earth end:   {trajectory[-1]}")
-#print(f"Total steps: {len(trajectory)}")
-
-# Checking energy results:
-#results = sim.get_results()
-#print(f"Initial energy: {results.energies[0]:.6e}")
-#print(f"Final energy:   {results.energies[-1]:.6e}")
-#print(f"Total energies stored: {len(results.energies)}")
-
-# Manual drift calculation
-#e0 = results.energies[0]
-#ef = results.energies[-1]
-#manual_drift = abs((ef - e0) / e0) * 100
-#print(f"Manual drift calculation: {manual_drift:.15f}%")
-#print(f"Difference: {abs(ef - e0):.6e} J")
-
-# simulation just computed:
-#
-# 8,766 time steps (one per hour for a year)
-# 5 bodies per step
-# 20 gravitational pair calculations per step
-# 4 derivative evaluations per step (RK4)
-# Total: roughly 700,000 gravitational calculations
-#
-
-
-
+        print(f"\nError running visualization for {system_type}: {e}")
+        # prints the file name, line number and call chain to the console.
+        traceback.print_exc()
+        logger.error(
+            f"Error running visualization for {system_type}: {e}\n"
+            # returns the same text as a string, so the log file gets it too.
+            f"{traceback.format_exc()}"
+        )
 
 def main():
     """Main application entry point"""

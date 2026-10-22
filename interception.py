@@ -31,7 +31,7 @@ class InterceptionCalculator:
         asteroid_vel = np.array(self.sim_data.velocities[self.asteroid.name])
         earth_vel = np.array(self.sim_data.velocities['Earth'])
 
-        times = self.sim_data.times  # in years
+        times = np.array(self.sim_data.times)  # in years
 
         best_dv = np.inf
         best_launch = None
@@ -40,16 +40,21 @@ class InterceptionCalculator:
         best_v2 = None
 
         # Search over launch dates, hourly steps
-        for i, t_launch in enumerate(times[:search_days * 24]):
+        for day in range(search_days):
+            t_launch = day / 365.25
+
+            # Find the stored frame closest after this time
+            i = np.searchsorted(times, t_launch)
+            if i >= len(times):
+                break
 
             r1 = earth_traj[i]
 
             # Search over flight times, 0.5 to 3 years
             for tof in np.arange(0.5, 3.0, 0.1):
 
-                # Arrival index
-                arrival_hours = int(tof * 365.25 * 24)
-                j = i + arrival_hours
+                # Arrival index - Arrival frame found from TIME, not from an hour count
+                j = np.searchsorted(times, t_launch + tof)
                 if j >= len(times):
                     continue
 
@@ -82,7 +87,7 @@ class InterceptionCalculator:
 
                 if total_dv < best_dv:
                     best_dv = total_dv
-                    best_launch = t_launch
+                    best_launch = times[i]  # actual stored time of that frame
                     best_tof = tof
                     best_v1 = v1
                     best_v2 = v2
@@ -257,8 +262,6 @@ class InterceptionCalculator:
         # Physical validity checks, reject degenerate solutions
         if g == 0 or abs(f) > 100 or abs(gdot) > 100:
             return None, None
-
-        print(f"  Lambert internals: A={A:.4f}, y={y:.4f}, g={g:.4f}, f={f:.4f}, gdot={gdot:.4f}")
 
         v1 = (r2_vec - f * r1_vec) / g
         v2 = (gdot * r2_vec - r1_vec) / g

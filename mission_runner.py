@@ -117,14 +117,15 @@ class MissionRunner:
         # Results from sim:
         sim_data = sim.get_results()
 
+        # Bodies now hold end-of-transit state, so asteroid.velocity is the arrival velocity
+        self.extract_final_state(sim_data, bodies)
+
         # Apply arrival burn/Match the asteroid's velocity
         delta_v2_mag = self.apply_impulsive_burn(self.rocket, self.asteroid.velocity)
         if delta_v2_mag is None:
             print(f"Arrival Burn Failed")
             return None
 
-        # So all bodies hold their end-of-transit positions:
-        self.extract_final_state(sim_data, bodies)
         return sim_data
 
     def deploy_drones(self):
@@ -144,7 +145,7 @@ class MissionRunner:
         drones = []
 
         for i, formation_offset in enumerate(formation):
-            position = self.asteroid.position + self.formation_offset
+            position = self.asteroid.position + formation_offset
 
             # moving with the asteroid
             velocity = self.asteroid.velocity.copy()
@@ -162,7 +163,7 @@ class MissionRunner:
             )
             drones.append(drone)
 
-        drones = drones
+        self.drones = drones
         return drones
 
 
@@ -172,7 +173,6 @@ class MissionRunner:
         drones = self.deploy_drones()
 
         bodies = [self.sun, self.earth, self.moon, self.asteroid, self.rocket] + drones
-        bodies.update()
 
         # Create a fresh Simulation object and run it
         sim = Simulation(bodies, self.integrator)
@@ -281,9 +281,36 @@ class MissionRunner:
 
         return merged
 
+    def configure_fuel(self, reserve_fraction=0.075):
+        # Size the tank so that after the departure + arrival burns,
+        # reserve_fraction of the LOADED fuel is still left over.
+        dv = self.mission_plan['delta_v_launch']  # departure + arrival burns only
+        ve = self.rocket.exhaust_vel
+        m_empty = self.rocket.dry_mass + self.rocket.reactor_fuel_mass
 
+        shrink = np.exp(-dv / ve)  # m_final / m_initial for the burns
+
+        if shrink <= reserve_fraction:
+            print(f"Cannot leave {reserve_fraction * 100:.1f}% reserve: "
+                  f"delta-v {dv * 4.74057:.2f} km/s is too large for "
+                  f"exhaust velocity {ve * 4.74057:.2f} km/s")
+            return False
+
+        # Derived from: (m_empty + F)(1 - shrink) = (1 - reserve) * F
+        fuel = m_empty * (1 - shrink) / (shrink - reserve_fraction)
+
+        self.rocket.fuel_mass = fuel
+        self.rocket.mass = m_empty + fuel
+        self.initial_fuel_mass = fuel
+
+        print(f"Fuel configured for {dv * 4.74057:.2f} km/s: {fuel:.3e} M☉ "
+              f"({reserve_fraction * 100:.1f}% reserve)")
+        return True
 
     def run_full_mission(self):
+        if not self.configure_fuel(reserve_fraction=0.075):
+            return None
+
         # calls everything above in order, returns one combined SimulationData
         print("Running Stage 1: Pre-launch...")
         stage1_data = self.run_stage_1_prelaunch()
